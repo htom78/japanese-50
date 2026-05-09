@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Mockup 02 · Course Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .frame {
+    width: 1440px; height: 900px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    padding: 80px 64px;
+  }
+
+  .header {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 64px;
+    align-items: end;
+    margin-bottom: 56px;
+  }
+  .header-kicker {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; color: var(--ink-3); text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .header-title {
+    font-family: var(--font-display-jp); font-weight: 500;
+    font-size: 56px; line-height: 1.05; color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .header-title .small {
+    display: block;
+    font-family: var(--font-display-en); font-size: 18px; color: var(--ink-3); font-weight: 400;
+    margin-top: 8px;
+    letter-spacing: 0.01em;
+  }
+  .header-lede { font-family: var(--font-body-jp); font-size: 14px; color: var(--ink-2); line-height: 1.85; max-width: 380px; }
+
+  /* Bento map: 4 levels with asymmetric tile sizes */
+  .map {
+    display: grid;
+    grid-template-columns: 0.85fr 1.05fr 1.7fr 1.1fr;
+    grid-template-rows: 200px 1fr;
+    gap: 16px;
+    height: 580px;
+  }
+
+  .level {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 24px 24px 22px;
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .level-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .level-tag {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+  }
+  .level-count {
+    font-family: var(--font-display-en);
+    font-size: 36px; font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .level-count small { font-family: var(--font-display-en); font-size: 14px; color: var(--ink-4); font-weight: 400; }
+  .level-name {
+    font-family: var(--font-display-jp);
+    font-size: 26px; font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .level-name-en {
+    font-family: var(--font-display-en); font-size: 12px; color: var(--ink-3);
+    letter-spacing: 0.04em;
+  }
+  .level-desc {
+    font-family: var(--font-body-jp); font-size: 12px; color: var(--ink-2);
+    line-height: 1.7; margin-top: auto;
+  }
+
+  /* status indicator: thin progress line at bottom */
+  .level-progress {
+    height: 3px; background: var(--bg-tint); border-radius: 2px;
+    margin-top: 16px;
+    position: relative;
+  }
+  .level-progress::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+  .level.l5 .level-progress::after { background: var(--indigo); width: 100%; }
+  .level.l4 .level-progress::after { background: var(--indigo); width: 16%; }
+  .level.l3 .level-progress::after { background: var(--ink-5); width: 0; }
+  .level.l2 .level-progress::after { background: var(--ink-5); width: 0; }
+
+  .level.l5 { grid-column: 1; grid-row: 1 / span 2; }
+  .level.l4 { grid-column: 2; grid-row: 1 / span 2; }
+  .level.l3 { grid-column: 3; grid-row: 1 / span 2; background: var(--surface-elev); }
+  .level.l2 { grid-column: 4; grid-row: 1 / span 2; }
+
+  .level.l5 .level-tag { color: var(--vermillion); }
+  .level.l5::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--vermillion); }
+
+  /* lessons mini-grid inside each level */
+  .lessons-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 18px; }
+  .lessons-mini .cell {
+    aspect-ratio: 1;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+    background: var(--bg);
+  }
+  .lessons-mini .cell.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .lessons-mini .cell.next { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+  .lessons-mini .cell.locked { color: var(--ink-5); }
+
+  /* Right-side journey illustration: connecting lines */
+  .journey-line {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* foot meta strip */
+  .footstrip {
+    position: absolute; bottom: 32px; left: 64px; right: 64px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+
+  .footstrip .count-blocks { display: flex; gap: 28px; }
+  .count-blocks > div { display: flex; align-items: baseline; gap: 8px; }
+  .count-blocks .num { font-family: var(--font-display-en); font-size: 16px; color: var(--ink); font-weight: 500; letter-spacing: 0; text-transform: none; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header class="header">
+    <div>
+      <div class="header-kicker">— 02 · Course map</div>
+      <h2 class="header-title">
+        50 課を、4 つの階段で。
+        <span class="small">From beginner kana to literary essays — a graded ascent.</span>
+      </h2>
+    </div>
+    <p class="header-lede">
+      各等级的设计尽量做到「上一级最后一课的句法,在下一级第一课会自然复现」。学完不是终点,是把工具用熟。
+    </p>
+  </header>
+
+  <div class="map">
+    <article class="level l5">
+      <div class="level-head">
+        <span class="level-tag">N5 · 入門</span>
+        <div class="level-count">8<small>/8</small></div>
+      </div>
+      <h3 class="level-name">入門<span class="level-name-en"> · Foundation</span></h3>
+      <p class="level-desc">「は・が・を・に・で」五个核心助词,です・ます 礼貌体,数字、时间、形容词、过去时。100 字短文。</p>
+      <div class="lessons-mini">
+        <div class="cell done">01</div><div class="cell done">02</div><div class="cell done">03</div><div class="cell done">04</div>
+        <div class="cell done">05</div><div class="cell done">06</div><div class="cell done">07</div><div class="cell done">08</div>
+      </div>
+      <div class="level-progress"></div>
+    </article>
+
+    <article class="level l4">
+      <div class="level-head">
+        <span class="level-tag">N4 · 基礎</span>
+        <div class="level-count">2<small>/12</small></div>
+      </div>
+      <h3 class="level-name">基礎<span class="level-name-en"> · Bridge</span></h3>
+      <p class="level-desc">て形、可能形、たい・条件・授受、引用。能写一篇 300 字的日记。</p>
+      <div class="lessons-mini">
+        <div class="cell done">09</div><div class="cell done">10</div><div class="cell next">11</div><div class="cell">12</div>
+        <div class="cell">13</div><div class="cell">14</div><div class="cell">15</div><div class="cell">16</div>
+        <div class="cell">17</div><div class="cell">18</div><div class="cell">19</div><div class="cell">20</div>
+      </div>
+      <div class="level-progress"></div>
+    </article>
+
+    <article class="level l3">
+      <div class="level-head">
+        <span class="level-tag">N3 · 展開</span>
+        <div class="level-count">0<small>/18</small></div>
+      </div>
+      <h3 class="level-name">展開<span class="level-name-en"> · Expansion</span></h3>
+      <p class="level-desc">受身・使役・敬語、近义语法的精确辨析。能读懂报刊评论,写商务邮件。</p>
+      <div class="lessons-mini">
+        <div class="cell locked">21</div><div class="cell locked">22</div><div class="cell locked">23</div><div class="cell locked">24</div>
+        <div class="cell locked">25</div><div class="cell locked">26</div><div class="cell locked">27</div><div class="cell locked">28</div>
+        <div class="cell locked">29</div><div class="cell locked">30</div><div class="cell locked">31</div><div class="cell locked">32</div>
+        <div class="cell locked">33</div><div class="cell locked">34</div><div class="cell locked">35</div><div class="cell locked">36</div>
+      </div>
+      <div class="level-progress"></div>
+    </article>
+
+    <article class="level l2">
+      <div class="level-head">
+        <span class="level-tag">N2 · 熟達</span>
+        <div class="level-count">0<small>/12</small></div>
+      </div>
+      <h3 class="level-name">熟達<span class="level-name-en"> · Mastery</span></h3>
+      <p class="level-desc">だ・である 书面体、议论文结构、抽象时间表达。能读散文、写论说文。</p>
+      <div class="lessons-mini">
+        <div class="cell locked">39</div><div class="cell locked">40</div><div class="cell locked">41</div><div class="cell locked">42</div>
+        <div class="cell locked">43</div><div class="cell locked">44</div><div class="cell locked">45</div><div class="cell locked">46</div>
+        <div class="cell locked">47</div><div class="cell locked">48</div><div class="cell locked">49</div><div class="cell locked">50</div>
+      </div>
+      <div class="level-progress"></div>
+    </article>
+  </div>
+
+  <div class="footstrip">
+    <span>continuous spiral · vocabulary recurs</span>
+    <div class="count-blocks">
+      <div><span class="num">600h</span> total</div>
+      <div><span class="num">1.4k</span> vocab</div>
+      <div><span class="num">230+</span> grammar points</div>
+      <div><span class="num">50</span> dialogues</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

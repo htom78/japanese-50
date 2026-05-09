@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Mockup 03 · Lesson Grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .frame {
+    width: 1440px; height: 900px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    padding: 64px 64px 32px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 48px;
+  }
+
+  /* Left rail */
+  .rail { display: flex; flex-direction: column; gap: 24px; }
+  .rail-kicker {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.22em; color: var(--ink-3); text-transform: uppercase;
+  }
+  .rail-title {
+    font-family: var(--font-display-jp); font-weight: 500;
+    font-size: 38px; line-height: 1.1; letter-spacing: -0.005em;
+    color: var(--ink); margin-top: 8px;
+  }
+  .rail-search {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-body-en); font-size: 13px;
+    color: var(--ink-3);
+  }
+  .rail-search-icon { width: 14px; height: 14px; opacity: 0.6; }
+
+  .rail-section { border-top: 1px solid var(--line); padding-top: 18px; }
+  .rail-section-title {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.22em; color: var(--ink-4);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .rail-filter-list { display: flex; flex-direction: column; gap: 8px; }
+  .rail-filter-item {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-body-jp); font-size: 14px; color: var(--ink-2);
+    padding: 6px 10px; border-radius: 6px;
+    cursor: pointer;
+  }
+  .rail-filter-item.active { background: var(--ink); color: var(--bg); }
+  .rail-filter-item.active .rail-filter-count { color: var(--bg); opacity: 0.7; }
+  .rail-filter-count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); }
+
+  .rail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    padding: 4px 10px; border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-2);
+    cursor: pointer;
+  }
+  .tag.on { background: var(--indigo-soft); border-color: var(--indigo-soft); color: var(--indigo); }
+
+  .rail-resume {
+    margin-top: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    box-shadow: var(--shadow-soft);
+  }
+  .rail-resume-tag { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--vermillion); text-transform: uppercase; margin-bottom: 8px; }
+  .rail-resume-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--vermillion); }
+  .rail-resume-title { font-family: var(--font-display-jp); font-size: 17px; line-height: 1.4; }
+  .rail-resume-meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-top: 8px; }
+  .rail-resume-cta {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-display-en); font-size: 13px; color: var(--ink);
+    border-bottom: 1px solid var(--ink); padding-bottom: 2px;
+    cursor: pointer;
+  }
+
+  /* Right grid */
+  .grid-wrap { display: flex; flex-direction: column; gap: 18px; }
+  .grid-bar {
+    display: flex; align-items: end; justify-content: space-between;
+  }
+  .grid-bar-left { font-family: var(--font-display-en); font-size: 13px; color: var(--ink-3); }
+  .grid-bar-left strong { color: var(--ink); font-weight: 500; }
+  .grid-bar-right {
+    display: flex; gap: 4px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    align-items: center;
+  }
+  .grid-bar-right span { padding: 4px 10px; cursor: pointer; border-radius: 999px; }
+  .grid-bar-right span.on { background: var(--ink); color: var(--bg); }
+
+  /* Masonry-ish: irregular grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 168px;
+    gap: 14px;
+    flex: 1;
+    align-content: start;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    transition: all 220ms var(--ease);
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+  .card-id { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.15em; text-transform: uppercase; }
+  .card-jp { font-family: var(--font-display-jp); font-size: 17px; font-weight: 500; line-height: 1.35; color: var(--ink); }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; }
+  .card-cn { font-family: var(--font-body-jp); font-size: 11px; color: var(--ink-3); }
+  .card-level {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--bg-tint); color: var(--ink-2);
+  }
+  .card-level.l5 { background: var(--bg-tint); color: var(--ink); }
+  .card-level.l4 { background: #E5E0E8; color: #4A3F5C; }
+  .card-level.l3 { background: #DCE5EC; color: var(--indigo); }
+  .card-level.l2 { background: #ECDCD7; color: var(--vermillion); }
+
+  /* card variants for status */
+  .card.completed::before { content: ''; position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+  .card.next { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .card.next .card-id, .card.next .card-cn { color: rgba(247,244,238,0.7); }
+  .card.next .card-jp { color: var(--bg); }
+  .card.next .card-level { background: var(--vermillion); color: #fff; }
+  .card.locked { background: transparent; box-shadow: none; }
+  .card.locked .card-jp, .card.locked .card-cn, .card.locked .card-id { color: var(--ink-4); }
+
+  /* tall cards: span 2 rows on certain cards */
+  .card.tall { grid-row: span 2; }
+  .card.tall .card-jp { font-size: 22px; }
+  .card.tall .card-illust {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display-jp); font-size: 90px; color: var(--ink-5);
+    line-height: 1;
+  }
+
+  /* sticky pagination strip */
+  .frame-meta {
+    position: absolute; bottom: 32px; left: 64px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <aside class="rail">
+    <div>
+      <div class="rail-kicker">— 03 · Lesson Index</div>
+      <h2 class="rail-title">課を選ぶ。</h2>
+    </div>
+    <div class="rail-search">
+      <svg class="rail-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      <span>語彙・文法を検索…</span>
+    </div>
+
+    <div class="rail-section">
+      <div class="rail-section-title">Level</div>
+      <div class="rail-filter-list">
+        <div class="rail-filter-item active">All <span class="rail-filter-count">50</span></div>
+        <div class="rail-filter-item">N5 · 入門 <span class="rail-filter-count">8</span></div>
+        <div class="rail-filter-item">N4 · 基礎 <span class="rail-filter-count">12</span></div>
+        <div class="rail-filter-item">N3 · 展開 <span class="rail-filter-count">18</span></div>
+        <div class="rail-filter-item">N2 · 熟達 <span class="rail-filter-count">12</span></div>
+      </div>
+    </div>
+
+    <div class="rail-section">
+      <div class="rail-section-title">Grammar</div>
+      <div class="rail-tags">
+        <span class="tag on">て形</span>
+        <span class="tag">条件</span>
+        <span class="tag">敬語</span>
+        <span class="tag">受身</span>
+        <span class="tag">引用</span>
+        <span class="tag">推量</span>
+        <span class="tag">+ 12</span>
+      </div>
+    </div>
+
+    <div class="rail-resume">
+      <div class="rail-resume-tag">Continue</div>
+      <div class="rail-resume-title">第 11 課 · て形連結</div>
+      <div class="rail-resume-meta">朝のルーティン · 5 / 9 句</div>
+      <div class="rail-resume-cta">続ける →</div>
+    </div>
+  </aside>
+
+  <section class="grid-wrap">
+    <div class="grid-bar">
+      <div class="grid-bar-left"><strong>50</strong> lessons · <strong>10</strong> completed · <strong>40</strong> remaining</div>
+      <div class="grid-bar-right">
+        <span class="on">Grid</span>
+        <span>List</span>
+        <span>Map</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card completed"><span class="card-id">No. 01</span><div class="card-jp">わたしの一日</div><div class="card-meta"><span class="card-cn">My day</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed"><span class="card-id">No. 02</span><div class="card-jp">これ・それ・あれ</div><div class="card-meta"><span class="card-cn">こそあど系</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed tall"><span class="card-id">No. 03</span><div class="card-jp">場所と存在</div><div class="card-illust">所</div><div class="card-meta"><span class="card-cn">Position &amp; existence</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed"><span class="card-id">No. 04</span><div class="card-jp">時間と曜日</div><div class="card-meta"><span class="card-cn">Time &amp; weekday</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed"><span class="card-id">No. 05</span><div class="card-jp">動作と目的地</div><div class="card-meta"><span class="card-cn">Action &amp; destination</span><span class="card-level l5">N5</span></div></div>
+
+      <div class="card completed"><span class="card-id">No. 06</span><div class="card-jp">食べる・飲む・買う</div><div class="card-meta"><span class="card-cn">Eat / drink / buy</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed"><span class="card-id">No. 07</span><div class="card-jp">形容詞</div><div class="card-meta"><span class="card-cn">Adjectives</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed"><span class="card-id">No. 08</span><div class="card-jp">過去</div><div class="card-meta"><span class="card-cn">Past tense</span><span class="card-level l5">N5</span></div></div>
+      <div class="card completed"><span class="card-id">No. 09</span><div class="card-jp">て形入門</div><div class="card-meta"><span class="card-cn">Te-form intro</span><span class="card-level l4">N4</span></div></div>
+      <div class="card completed"><span class="card-id">No. 10</span><div class="card-jp">進行と状態</div><div class="card-meta"><span class="card-cn">In-progress &amp; state</span><span class="card-level l4">N4</span></div></div>
+
+      <div class="card next tall"><span class="card-id">No. 11 · Continue</span><div class="card-jp">て形連結<br>朝のルーティン</div><div class="card-illust" style="color: rgba(247,244,238,0.18);">連</div><div class="card-meta"><span class="card-cn">Te-form connection</span><span class="card-level">N4</span></div></div>
+      <div class="card"><span class="card-id">No. 12</span><div class="card-jp">普通形入門</div><div class="card-meta"><span class="card-cn">Plain form</span><span class="card-level l4">N4</span></div></div>
+      <div class="card"><span class="card-id">No. 13</span><div class="card-jp">可能形</div><div class="card-meta"><span class="card-cn">Potential form</span><span class="card-level l4">N4</span></div></div>
+      <div class="card"><span class="card-id">No. 14</span><div class="card-jp">たい・ほしい</div><div class="card-meta"><span class="card-cn">Wish &amp; want</span><span class="card-level l4">N4</span></div></div>
+      <div class="card locked"><span class="card-id">No. 21</span><div class="card-jp">受身</div><div class="card-meta"><span class="card-cn">Passive</span><span class="card-level l3">N3</span></div></div>
+    </div>
+  </section>
+
+  <div class="frame-meta">— 03 / lesson grid · masonry</div>
+</div>
+</body>
+</html>

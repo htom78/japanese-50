@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Mockup 01 · Hero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .frame {
+    width: 1440px; height: 900px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .nav {
+    position: absolute; top: 32px; left: 64px; right: 64px;
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand .seal { width: 32px; height: 32px; font-size: 13px; }
+  .brand-text { font-family: var(--font-display-jp); font-weight: 500; font-size: 16px; letter-spacing: 0.02em; }
+  .brand-text small { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.15em; margin-top: 2px; }
+  .nav-links { display: flex; gap: 28px; font-family: var(--font-display-en); font-size: 13px; }
+  .nav-links a { text-decoration: none; color: var(--ink-2); transition: color 200ms; letter-spacing: 0.02em; }
+  .nav-links a:hover { color: var(--indigo); }
+  .nav-links .current { color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 4px; }
+
+  /* Asymmetric hero — left big editorial title, right wash + progress */
+  .hero {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    align-items: end;
+    padding: 120px 64px 64px;
+    gap: 48px;
+  }
+  .hero-text { padding-bottom: 40px; }
+
+  .hero-kicker {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 28px;
+  }
+  .hero-kicker::before { content: ''; width: 32px; height: 1px; background: var(--ink-3); }
+
+  .hero-title {
+    font-family: var(--font-display-jp);
+    font-weight: 400;
+    font-size: 80px;
+    line-height: 1.06;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+  .hero-title .accent { color: var(--vermillion); font-weight: 600; }
+  .hero-title .small {
+    display: block;
+    font-family: var(--font-display-en);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    margin-top: 12px;
+    line-height: 1.3;
+  }
+
+  .hero-lede {
+    font-family: var(--font-body-jp);
+    font-size: 16px;
+    color: var(--ink-2);
+    max-width: 460px;
+    line-height: 1.85;
+    margin-bottom: 36px;
+  }
+
+  .hero-cta { display: flex; gap: 14px; align-items: center; }
+  .resume-card {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 18px;
+    border-left: 2px solid var(--indigo);
+  }
+  .resume-card-label { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.15em; text-transform: uppercase; }
+  .resume-card-text { font-family: var(--font-display-jp); font-size: 14px; color: var(--ink); }
+
+  /* Right canvas: massive 課 ink character with progress + facts */
+  .hero-canvas {
+    position: relative;
+    height: 100%;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding-bottom: 40px;
+    padding-left: 24px;
+  }
+
+  .ink-character {
+    position: absolute;
+    top: 52%;
+    right: -80px;
+    transform: translateY(-50%);
+    font-family: var(--font-display-jp);
+    font-size: 460px;
+    font-weight: 400;
+    line-height: 0.85;
+    color: var(--ink);
+    opacity: 0.78;
+    pointer-events: none;
+    user-select: none;
+    background: linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 70%, rgba(26,24,20,0.55) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .ink-character::after {
+    /* hanko under-stamp */
+    content: '初';
+    position: absolute;
+    bottom: 80px;
+    right: -10px;
+    width: 64px; height: 64px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--vermillion);
+    color: #FFFFFF;
+    font-size: 38px;
+    border-radius: 8px;
+    transform: rotate(4deg);
+    -webkit-text-fill-color: #FFFFFF;
+    filter: none;
+    line-height: 1;
+  }
+
+  .progress-block {
+    position: relative;
+    z-index: 2;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 24px 28px;
+    width: 280px;
+    box-shadow: var(--shadow-soft);
+    margin-left: auto;
+  }
+  .progress-block-label {
+    font-family: var(--font-mono);
+    font-size: 10px; color: var(--ink-3);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .progress-num { font-family: var(--font-display-en); font-size: 56px; font-weight: 500; line-height: 1; letter-spacing: -0.03em; }
+  .progress-num small { font-family: var(--font-display-en); font-size: 20px; color: var(--ink-3); font-weight: 400; }
+  .progress-bar { height: 4px; background: var(--bg-tint); border-radius: 2px; margin-top: 14px; position: relative; overflow: hidden; }
+  .progress-bar > span { position: absolute; left: 0; top: 0; bottom: 0; width: 20%; background: var(--indigo); border-radius: 2px; }
+  .progress-meta { display: flex; justify-content: space-between; margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.1em; }
+
+  .levels-strip {
+    position: relative;
+    z-index: 2;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-top: auto;
+  }
+  .level-cell { padding: 14px 16px; }
+  .level-cell + .level-cell { border-left: 1px solid var(--line); }
+  .level-cell-tag { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.18em; }
+  .level-cell-name { font-family: var(--font-display-jp); font-size: 18px; margin-top: 6px; color: var(--ink); }
+  .level-cell-meta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.05em; margin-top: 4px; }
+  .level-cell.active .level-cell-tag { color: var(--vermillion); }
+  .level-cell.active::before { content: ''; display: block; width: 8px; height: 2px; background: var(--vermillion); margin-bottom: 8px; }
+
+  /* Frame meta corner */
+  .frame-meta {
+    position: absolute; bottom: 28px; left: 64px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .frame-meta-r {
+    position: absolute; bottom: 28px; right: 64px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <nav class="nav">
+    <div class="brand">
+      <div class="seal">課</div>
+      <div class="brand-text">日本語五十課<small>NIHONGO 50 KA</small></div>
+    </div>
+    <div class="nav-links">
+      <a class="current">課程</a>
+      <a>進度</a>
+      <a>語彙索引</a>
+      <a>設定</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hero-kicker">N5 → N4 → N3 → N2 · A 600-hour journey</div>
+      <h1 class="hero-title">
+        ことばを、<br>ゆっくり<span class="accent">深</span>く。
+        <span class="small">Fifty lessons. From <em>「私は田中です」</em> to reading a literary essay.</span>
+      </h1>
+      <p class="hero-lede">
+        振假名・罗马音・中文三层显示;每句一键朗读;螺旋复现的语法体系;成人零基础到 N2 阅读水平的完整课程。一切就在浏览器里,无需注册、无需 API key、无需服务器。
+      </p>
+      <div class="hero-cta">
+        <button class="btn">課程を始める →</button>
+        <div class="resume-card">
+          <span class="resume-card-label">Continue</span>
+          <span class="resume-card-text">第 11 課 · て形連結</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-canvas">
+      <div class="progress-block">
+        <div class="progress-block-label">your journey</div>
+        <div class="progress-num">10<small>/ 50</small></div>
+        <div class="progress-bar"><span></span></div>
+        <div class="progress-meta"><span>N5 完了</span><span>N4 進行中</span></div>
+      </div>
+
+      <div class="ink-character">課</div>
+
+      <div class="levels-strip">
+        <div class="level-cell active">
+          <div class="level-cell-tag">N5</div>
+          <div class="level-cell-name">入門</div>
+          <div class="level-cell-meta">8 lessons</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-cell-tag">N4</div>
+          <div class="level-cell-name">基礎</div>
+          <div class="level-cell-meta">12 lessons</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-cell-tag">N3</div>
+          <div class="level-cell-name">展開</div>
+          <div class="level-cell-meta">18 lessons</div>
+        </div>
+        <div class="level-cell">
+          <div class="level-cell-tag">N2</div>
+          <div class="level-cell-name">熟達</div>
+          <div class="level-cell-meta">12 lessons</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="frame-meta">— 01 / hero</div>
+  <div class="frame-meta-r">v2 redesign · taste-skill</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Mockup 05 · Vocabulary &amp; Grammar Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .frame {
+    width: 1440px; height: 900px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    padding: 56px 64px;
+  }
+
+  /* Editorial header */
+  .edhead {
+    display: grid; grid-template-columns: 1.5fr 1fr; gap: 64px;
+    align-items: end;
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--line); padding-bottom: 28px;
+  }
+  .edhead-kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; color: var(--ink-3); text-transform: uppercase; margin-bottom: 14px; }
+  .edhead-title {
+    font-family: var(--font-display-jp); font-weight: 500;
+    font-size: 50px; line-height: 1.05; letter-spacing: -0.005em;
+  }
+  .edhead-title .small { display: block; font-family: var(--font-display-en); font-size: 16px; color: var(--ink-3); margin-top: 8px; font-weight: 400; }
+  .edhead-tabs { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+  .edtab {
+    padding: 8px 18px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-3);
+    border-radius: 999px; border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .edtab.active { background: var(--ink); color: var(--bg); }
+  .edtab.idle { border: 1px solid var(--line); }
+
+  /* 2-col split: vocabulary left, grammar right */
+  .split { display: grid; grid-template-columns: 1.1fr 1.4fr; gap: 36px; height: calc(100% - 220px); }
+
+  /* Vocabulary table */
+  .vocab-section { display: flex; flex-direction: column; }
+  .sec-heading {
+    display: flex; align-items: end; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .sec-name { font-family: var(--font-display-jp); font-size: 22px; font-weight: 500; }
+  .sec-meta { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase; }
+
+  .alpha-strip {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    margin-bottom: 14px;
+    font-family: var(--font-mono); font-size: 11px;
+  }
+  .alpha-strip span {
+    padding: 4px 10px; border-radius: 4px;
+    color: var(--ink-3); border: 1px solid var(--line);
+  }
+  .alpha-strip span.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .vocab-table {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .vocab-row {
+    display: grid;
+    grid-template-columns: 90px 90px 70px 1fr 56px;
+    gap: 16px;
+    padding: 12px 18px;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 200ms;
+  }
+  .vocab-row:hover { background: var(--bg-tint); }
+  .vocab-row:last-child { border-bottom: 0; }
+  .v-jp { font-family: var(--font-display-jp); font-size: 17px; }
+  .v-kana { font-family: var(--font-body-jp); font-size: 13px; color: var(--ink-2); }
+  .v-pos {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.08em;
+    padding: 2px 8px; border: 1px solid var(--line);
+    border-radius: 999px;
+    align-self: center;
+    text-align: center;
+  }
+  .v-mean { font-family: var(--font-body-jp); font-size: 13px; color: var(--ink-2); }
+  .v-lesson { font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); text-align: right; }
+
+  /* Grammar deck */
+  .grammar-section { display: flex; flex-direction: column; }
+  .gram-deck { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; align-content: start; }
+  .gram-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 22px 20px;
+    display: flex; flex-direction: column;
+    gap: 12px;
+    transition: all 220ms var(--ease);
+  }
+  .gram-card.feature {
+    grid-column: span 2;
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .gram-card:hover { transform: translateY(-2px); }
+  .gram-pat {
+    font-family: var(--font-mono); font-size: 13px; color: var(--indigo);
+    background: var(--indigo-soft);
+    padding: 4px 12px; border-radius: 999px;
+    align-self: flex-start;
+  }
+  .gram-card.feature .gram-pat { background: var(--vermillion); color: #fff; }
+  .gram-name { font-family: var(--font-display-jp); font-size: 18px; font-weight: 500; }
+  .gram-desc { font-family: var(--font-body-jp); font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+  .gram-card.feature .gram-desc { color: rgba(247,244,238,0.75); }
+  .gram-meta { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.12em; text-transform: uppercase; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); }
+  .gram-card.feature .gram-meta { border-top-color: rgba(247,244,238,0.18); color: rgba(247,244,238,0.5); }
+
+  .frame-meta {
+    position: absolute; bottom: 24px; left: 64px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header class="edhead">
+    <div>
+      <div class="edhead-kicker">— 05 · Reference index</div>
+      <h2 class="edhead-title">
+        語彙と文法、すべて一覧で。
+        <span class="small">All 1.4k vocabulary entries and 230+ grammar points, cross-linked to lessons.</span>
+      </h2>
+    </div>
+    <div class="edhead-tabs">
+      <span class="edtab idle">All</span>
+      <span class="edtab idle">Vocabulary</span>
+      <span class="edtab idle">Grammar</span>
+      <span class="edtab idle">Kanji</span>
+      <span class="edtab active">Both</span>
+    </div>
+  </header>
+
+  <div class="split">
+
+    <section class="vocab-section">
+      <div class="sec-heading">
+        <h3 class="sec-name">語彙索引</h3>
+        <span class="sec-meta">1,420 entries · sorted by reading</span>
+      </div>
+      <div class="alpha-strip">
+        <span class="on">あ</span><span>か</span><span>さ</span><span>た</span><span>な</span><span>は</span><span>ま</span><span>や</span><span>ら</span><span>わ</span><span>カ</span>
+      </div>
+
+      <div class="vocab-table">
+        <div class="vocab-row">
+          <span class="v-jp">起きる</span><span class="v-kana">おきる</span>
+          <span class="v-pos">動詞II</span>
+          <span class="v-mean">起床;醒来;发生</span>
+          <span class="v-lesson">L01</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">あげる</span><span class="v-kana">あげる</span>
+          <span class="v-pos">動詞II</span>
+          <span class="v-mean">给(对方);抬起</span>
+          <span class="v-lesson">L17</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">頭</span><span class="v-kana">あたま</span>
+          <span class="v-pos">名詞</span>
+          <span class="v-mean">头;头脑;思考力</span>
+          <span class="v-lesson">L24</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">新しい</span><span class="v-kana">あたらしい</span>
+          <span class="v-pos">い形容詞</span>
+          <span class="v-mean">新的</span>
+          <span class="v-lesson">L07</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">温かい</span><span class="v-kana">あたたかい</span>
+          <span class="v-pos">い形容詞</span>
+          <span class="v-mean">温暖的;热情的</span>
+          <span class="v-lesson">L15</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">遊ぶ</span><span class="v-kana">あそぶ</span>
+          <span class="v-pos">動詞I</span>
+          <span class="v-mean">玩;游玩;闲着</span>
+          <span class="v-lesson">L09</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">扱う</span><span class="v-kana">あつかう</span>
+          <span class="v-pos">動詞I</span>
+          <span class="v-mean">处理;使用;对待</span>
+          <span class="v-lesson">L37</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">後</span><span class="v-kana">あと</span>
+          <span class="v-pos">名詞</span>
+          <span class="v-mean">后面;之后;剩下的</span>
+          <span class="v-lesson">L11</span>
+        </div>
+        <div class="vocab-row">
+          <span class="v-jp">あるいは</span><span class="v-kana">あるいは</span>
+          <span class="v-pos">接続詞</span>
+          <span class="v-mean">或者;或许</span>
+          <span class="v-lesson">L40</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="grammar-section">
+      <div class="sec-heading">
+        <h3 class="sec-name">文法体系</h3>
+        <span class="sec-meta">237 patterns · clustered by function</span>
+      </div>
+
+      <div class="gram-deck">
+        <article class="gram-card feature">
+          <span class="gram-pat">N₁ は N₂ より A です</span>
+          <h4 class="gram-name">比较句的标准形式</h4>
+          <p class="gram-desc">
+            两者比较的基本句型。「より」前是被比较的对象,「は」标记主语。否定时用「あまり〜ません」配合「のほうが」;最高级用「〜の中で〜が一番 A」。本课同时介绍「どちら」专用于二选一的情境。
+          </p>
+          <div class="gram-meta"><span>L15 · 比較</span><span>N4 · 基礎</span></div>
+        </article>
+
+        <article class="gram-card">
+          <span class="gram-pat">V て、V</span>
+          <h4 class="gram-name">动作连接</h4>
+          <p class="gram-desc">用て形把两个或以上的动作按时间或逻辑顺序串联。是 N4 第一大难关。</p>
+          <div class="gram-meta"><span>L11</span><span>N4</span></div>
+        </article>
+
+        <article class="gram-card">
+          <span class="gram-pat">V (ら)れる</span>
+          <h4 class="gram-name">受身形(被动)</h4>
+          <p class="gram-desc">日语被动除"被某人做",还有"受到困扰"的迷惑被动义。</p>
+          <div class="gram-meta"><span>L21</span><span>N3</span></div>
+        </article>
+
+        <article class="gram-card">
+          <span class="gram-pat">〜てしまう / 〜ちゃう</span>
+          <h4 class="gram-name">遗憾完成 / 口语缩约</h4>
+          <p class="gram-desc">两种语感:已经完成 / 不小心做了。常体口语缩成「〜ちゃった」。</p>
+          <div class="gram-meta"><span>L38</span><span>N3</span></div>
+        </article>
+
+        <article class="gram-card">
+          <span class="gram-pat">〜にもかかわらず</span>
+          <h4 class="gram-name">让步逆接(书面)</h4>
+          <p class="gram-desc">N2 高级让步表达,常见于评论文与论说文。比口语「のに」正式。</p>
+          <div class="gram-meta"><span>L44</span><span>N2</span></div>
+        </article>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="frame-meta">— 05 / vocabulary &amp; grammar · cross-link reference</div>
+</div>
+</body>
+</html>

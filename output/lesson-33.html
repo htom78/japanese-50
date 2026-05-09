@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 · 第33課 — 目的の表現</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #F5F1E8;
+    --bg-elevated: #FAF8F3;
+    --bg-overlay: #FFFEF9;
+    --fg-primary: #2A2620;
+    --fg-secondary: #5C544A;
+    --fg-tertiary: #8C8275;
+    --border-subtle: rgba(42, 38, 32, 0.08);
+    --border-default: rgba(42, 38, 32, 0.14);
+    --accent: #A8895C;
+    --accent-hover: #B89968;
+    --accent-soft: rgba(168, 137, 92, 0.12);
+
+    --serif-jp: "Noto Serif JP", serif;
+    --sans-jp: "Noto Sans JP", sans-serif;
+    --sans-en: "IBM Plex Sans", sans-serif;
+    --mono: "IBM Plex Mono", monospace;
+
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-base);
+    color: var(--fg-primary);
+    font-family: var(--sans-jp);
+    font-size: 14px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(168, 137, 92, 0.04) 0%, transparent 50%),
+      radial-gradient(at 80% 90%, rgba(168, 137, 92, 0.03) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* Header */
+  .masthead {
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .masthead-title {
+    font-family: var(--serif-jp);
+    font-weight: 500;
+  }
+
+  .masthead-title .level {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .masthead-title .title-jp {
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--fg-primary);
+  }
+
+  .masthead-title .title-en {
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .masthead-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* Goals */
+  .goals {
+    background: var(--bg-elevated);
+    border-left: 2px solid var(--accent);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .goals-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .goals ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .goals li {
+    font-size: 12px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+  }
+
+  /* Lesson nav */
+  .lesson-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.05em;
+  }
+
+  .lesson-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms var(--ease);
+  }
+
+  .lesson-nav a:hover { border-bottom-color: var(--accent); }
+
+  .lesson-nav .current { color: var(--fg-secondary); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .control-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .toggle-group {
+    display: inline-flex;
+    border: 1px solid var(--border-default);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .toggle {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    border-right: 1px solid var(--border-default);
+  }
+
+  .toggle:last-child { border-right: none; }
+
+  .toggle:hover { color: var(--fg-primary); }
+
+  .toggle.active {
+    background: var(--accent);
+    color: var(--bg-overlay);
+  }
+
+  .speed-select {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  /* Audio control */
+  .audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    margin-bottom: 40px;
+  }
+
+  .play-btn {
+    background: var(--fg-primary);
+    color: var(--bg-overlay);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 200ms var(--ease);
+    flex-shrink: 0;
+  }
+
+  .play-btn:hover { background: var(--accent); }
+
+  .play-btn svg { width: 14px; height: 14px; }
+
+  .audio-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .audio-info-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: 2px;
+  }
+
+  .audio-info-text {
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Article */
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .article-title {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .article-title .ja-small {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-left: 12px;
+    font-weight: 400;
+    font-family: var(--sans-en);
+    font-style: italic;
+  }
+
+  .article + .article {
+    margin-top: 48px;
+  }
+
+  /* Sentence */
+  .sentence {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 200ms var(--ease);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .sentence:hover { background: var(--accent-soft); }
+  .sentence.playing { background: var(--accent-soft); }
+
+  .sentence.playing::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .jp-text {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    line-height: 2.1;
+    color: var(--fg-primary);
+    letter-spacing: 0.02em;
+  }
+
+  /* Furigana via ruby */
+  ruby { ruby-position: over; }
+
+  rt {
+    font-family: var(--sans-jp);
+    font-size: 0.5em;
+    color: var(--fg-tertiary);
+    font-weight: 400;
+    letter-spacing: 0;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-furigana rt { opacity: 0; }
+
+  .romaji {
+    font-family: var(--sans-en);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    line-height: 1.6;
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-romaji .romaji { display: none; }
+
+  .translation {
+    font-family: var(--sans-jp);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  body.hide-translation .translation { display: none; }
+
+  /* Dialogue */
+  .dialogue-scene {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border-radius: 2px;
+  }
+
+  .dialogue-line { padding: 12px 0 12px 16px; border-bottom: 1px solid var(--border-subtle); border-left: 2px solid transparent; cursor: pointer; transition: all 200ms var(--ease); margin: 0 -16px; padding-right: 16px; }
+  .dialogue-line:hover { background: var(--accent-soft); border-left-color: var(--accent); }
+  .dialogue-line.playing { background: var(--accent-soft); border-left-color: var(--accent); }
+
+  .speaker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* Questions */
+  .question {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .question-q { margin-bottom: 8px; }
+  .question-a { padding-left: 16px; border-left: 2px solid var(--accent-soft); margin-top: 6px; }
+  .q-mark { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .question-hint {
+    font-family: var(--sans-jp);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* Notes section */
+  .section-divider {
+    margin: 64px 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-default);
+  }
+
+  .section-divider-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+
+  .vocab-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+
+  .vocab-item {
+    display: grid;
+    grid-template-columns: minmax(80px, 0.9fr) minmax(100px, 1fr) minmax(60px, 0.5fr) 2fr;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: baseline;
+  }
+
+  .vocab-jp { font-family: var(--serif-jp); font-size: 15px; color: var(--fg-primary); }
+  .vocab-kana { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-secondary); }
+  .vocab-romaji { font-family: var(--sans-en); font-style: italic; font-size: 12px; color: var(--fg-tertiary); }
+  .vocab-meaning { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); }
+  .vocab-pos { font-family: var(--mono); font-size: 9px; color: var(--accent); margin-left: 6px; letter-spacing: 0.05em; }
+
+  .grammar-point { padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .grammar-pattern { font-family: var(--mono); font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 2px; display: inline-block; margin-bottom: 8px; }
+  .grammar-name { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-tertiary); margin-left: 8px; }
+  .grammar-explain { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); line-height: 1.75; margin-bottom: 10px; }
+  .grammar-examples { background: var(--bg-elevated); padding: 10px 14px; border-radius: 2px; font-size: 13px; }
+  .grammar-example { padding: 4px 0; }
+  .grammar-example .ex-jp { font-family: var(--serif-jp); color: var(--fg-primary); }
+  .grammar-example .ex-cn { font-size: 11px; color: var(--fg-tertiary); margin-top: 2px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-default);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .tts-status { font-family: var(--mono); font-size: 10px; color: var(--fg-tertiary); letter-spacing: 0.05em; }
+  .tts-status.unavailable { color: #8B4513; }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 20px 64px; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead-meta { text-align: left; }
+    .jp-text { font-size: 17px; }
+    .vocab-item { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+    .controls { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <nav class="lesson-nav" id="lesson-nav"></nav>
+
+    <header class="masthead">
+      <div class="masthead-title">
+        <span class="level" id="m-level"></span>
+        <h1 class="title-jp" id="m-title-jp"></h1>
+        <div class="title-en" id="m-title-en"></div>
+      </div>
+      <div class="masthead-meta">
+        <div id="m-lesson-no"></div>
+        <div id="tts-status" class="tts-status">音声 · loading…</div>
+      </div>
+    </header>
+
+    <div class="goals" id="goals-block">
+      <div class="goals-label">学習目標 · goals</div>
+      <ul id="goals-list"></ul>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">Furigana</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="furigana" data-state="on">On</button>
+          <button class="toggle" data-toggle="furigana" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Romaji</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="romaji" data-state="on">On</button>
+          <button class="toggle" data-toggle="romaji" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">中文</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="translation" data-state="on">On</button>
+          <button class="toggle" data-toggle="translation" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Speed</span>
+        <select class="speed-select" id="speed-select">
+          <option value="0.7">0.7×</option>
+          <option value="0.85" selected>0.85×</option>
+          <option value="1.0">1.0×</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="audio-bar">
+      <button class="play-btn" id="play-all" aria-label="播放全文">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="audio-info">
+        <div class="audio-info-label">Now reading</div>
+        <div class="audio-info-text" id="now-reading">クリックで再生 / Click sentence to play</div>
+      </div>
+    </div>
+
+    <div id="articles"></div>
+
+    <div class="section-divider" id="dialogue-divider" hidden>
+      <span class="section-divider-text">対話 · dialogue</span>
+    </div>
+    <section id="dialogue-block" hidden>
+      <div class="dialogue-scene" id="dialogue-scene"></div>
+      <div id="dialogue-lines"></div>
+    </section>
+
+    <div class="section-divider" id="questions-divider" hidden>
+      <span class="section-divider-text">理解問題 · comprehension</span>
+    </div>
+    <section id="questions-block" hidden></section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">語彙 · vocabulary</span>
+    </div>
+    <section class="notes">
+      <div class="vocab-grid" id="vocab-grid"></div>
+    </section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">文法 · grammar</span>
+    </div>
+    <section class="notes" id="grammar-notes"></section>
+
+    <footer class="footer">
+      <span id="footer-meta"></span>
+      <span>web speech api</span>
+    </footer>
+
+  </div>
+
+<script id="lesson-data" type="application/json">{"lesson":{"id":33,"level":"N3","title":{"jp":"目的の表現","romaji":"mokuteki no hyougen","cn":"目的的表达","en":"Expressing Purpose"},"goals":["区分「ために」（意志动词）与「ように」（非意志/可能形）","能用目的表达描述自己的行动动机","掌握「ように」常与否定、可能形搭配的用法"],"articles":[{"kind":"main","title":{"jp":"健康のために","romaji":"kenkou no tame ni","cn":"为了健康"},"sentences":[{"jp":"<ruby>最近<rt>さいきん</rt></ruby>、<ruby>健康<rt>けんこう</rt></ruby>のためにいろいろな<ruby>習慣<rt>しゅうかん</rt></ruby>を<ruby>変<rt>か</rt></ruby>えました。","plain":"さいきん、けんこうのためにいろいろなしゅうかんをかえました。","romaji":"saikin, kenkou no tame ni iroiro na shuukan o kaemashita.","cn":"最近，为了健康改变了许多习惯。"},{"jp":"<ruby>毎朝<rt>まいあさ</rt></ruby><ruby>三十分<rt>さんじゅっぷん</rt></ruby><ruby>歩<rt>ある</rt></ruby>くために、<ruby>一<rt>いち</rt></ruby><ruby>時間<rt>じかん</rt></ruby><ruby>早<rt>はや</rt></ruby>く<ruby>起<rt>お</rt></ruby>きるようにしています。","plain":"まいあささんじゅっぷんあるくために、いちじかんはやくおきるようにしています。","romaji":"maiasa sanjuppun aruku tame ni, ichi-jikan hayaku okiru you ni shiteimasu.","cn":"为了每天早上走三十分钟，努力提早一小时起床。"},{"jp":"<ruby>体<rt>からだ</rt></ruby>に<ruby>悪<rt>わる</rt></ruby>いものを<ruby>食<rt>た</rt></ruby>べないように<ruby>気<rt>き</rt></ruby>をつけています。","plain":"からだにわるいものをたべないようにきをつけています。","romaji":"karada ni warui mono o tabenai you ni ki o tsuketeimasu.","cn":"为了不吃对身体不好的东西而注意着。"},{"jp":"<ruby>痩<rt>や</rt></ruby>せるために<ruby>夕食<rt>ゆうしょく</rt></ruby>の<ruby>量<rt>りょう</rt></ruby>を<ruby>減<rt>へ</rt></ruby>らしました。","plain":"やせるためにゆうしょくのりょうをへらしました。","romaji":"yaseru tame ni yuushoku no ryou o herashimashita.","cn":"为了减肥，减少了晚饭的量。"},{"jp":"お<ruby>酒<rt>さけ</rt></ruby>はストレスがたまらないように、<ruby>少<rt>すこ</rt></ruby>しだけ<ruby>飲<rt>の</rt></ruby>みます。","plain":"おさけはストレスがたまらないように、すこしだけのみます。","romaji":"o-sake wa sutoresu ga tamaranai you ni, sukoshi dake nomimasu.","cn":"酒为了不让压力堆积，只喝一点。"},{"jp":"よく<ruby>眠<rt>ねむ</rt></ruby>れるように、<ruby>夜<rt>よる</rt></ruby>はスマホを<ruby>見<rt>み</rt></ruby>すぎないようにしています。","plain":"よくねむれるように、よるはスマホをみすぎないようにしています。","romaji":"yoku nemureru you ni, yoru wa sumaho o misuginai you ni shiteimasu.","cn":"为了能睡好觉，晚上注意不过度看手机。"},{"jp":"<ruby>家族<rt>かぞく</rt></ruby>のために、<ruby>毎日<rt>まいにち</rt></ruby><ruby>野菜<rt>やさい</rt></ruby>がたっぷりの<ruby>料理<rt>りょうり</rt></ruby>を<ruby>作<rt>つく</rt></ruby>るようにしています。","plain":"かぞくのために、まいにちやさいがたっぷりのりょうりをつくるようにしています。","romaji":"kazoku no tame ni, mainichi yasai ga tappuri no ryouri o tsukuru you ni shiteimasu.","cn":"为了家人，每天努力做蔬菜丰富的饭菜。"},{"jp":"<ruby>水<rt>みず</rt></ruby>を<ruby>忘<rt>わす</rt></ruby>れないように、いつも<ruby>机<rt>つくえ</rt></ruby>の<ruby>上<rt>うえ</rt></ruby>に<ruby>置<rt>お</rt></ruby>いてあります。","plain":"みずをわすれないように、いつもつくえのうえにおいてあります。","romaji":"mizu o wasurenai you ni, itsumo tsukue no ue ni oite arimasu.","cn":"为了不忘记喝水，总是放在桌上。"},{"jp":"<ruby>変化<rt>へんか</rt></ruby>はゆっくりですが、<ruby>体調<rt>たいちょう</rt></ruby>がだんだん<ruby>良<rt>よ</rt></ruby>くなっているのを<ruby>感<rt>かん</rt></ruby>じます。","plain":"へんかはゆっくりですが、たいちょうがだんだんよくなっているのをかんじます。","romaji":"henka wa yukkuri desu ga, taichou ga dandan yoku natteiru no o kanjimasu.","cn":"变化虽慢，但能感到身体状况渐渐变好。"},{"jp":"<ruby>長<rt>なが</rt></ruby>く<ruby>続<rt>つづ</rt></ruby>けるためには、<ruby>無理<rt>むり</rt></ruby>をしないことが<ruby>大切<rt>たいせつ</rt></ruby>だと<ruby>思<rt>おも</rt></ruby>います。","plain":"ながくつづけるためには、むりをしないことがたいせつだとおもいます。","romaji":"nagaku tsuzukeru tame ni wa, muri o shinai koto ga taisetsu da to omoimasu.","cn":"为了长久坚持，我觉得不勉强很重要。"},{"jp":"<ruby>健康<rt>けんこう</rt></ruby>は<ruby>未来<rt>みらい</rt></ruby>の<ruby>自分<rt>じぶん</rt></ruby>へのプレゼントです。","plain":"けんこうはみらいのじぶんへのプレゼントです。","romaji":"kenkou wa mirai no jibun e no purezento desu.","cn":"健康是给未来自己的礼物。"}]},{"kind":"companion","title":{"jp":"忘れないように","romaji":"wasurenai you ni","cn":"为了不忘记"},"sentences":[{"jp":"<ruby>大事<rt>だいじ</rt></ruby>な<ruby>予定<rt>よてい</rt></ruby>を<ruby>忘<rt>わす</rt></ruby>れないように、いくつかの<ruby>工夫<rt>くふう</rt></ruby>をしています。","plain":"だいじなよていをわすれないように、いくつかのくふうをしています。","romaji":"daiji na yotei o wasurenai you ni, ikutsuka no kufuu o shiteimasu.","cn":"为了不忘记重要的安排，做了几个小技巧。"},{"jp":"スマホのカレンダーに<ruby>必<rt>かなら</rt></ruby>ず<ruby>登録<rt>とうろく</rt></ruby>するようにしています。","plain":"スマホのカレンダーにかならずとうろくするようにしています。","romaji":"sumaho no karendaa ni kanarazu touroku suru you ni shiteimasu.","cn":"坚持一定登录到手机日历里。"},{"jp":"<ruby>朝<rt>あさ</rt></ruby><ruby>気<rt>き</rt></ruby>づけるように、<ruby>前<rt>まえ</rt></ruby>の<ruby>日<rt>ひ</rt></ruby>の<ruby>夜<rt>よる</rt></ruby>に<ruby>準備<rt>じゅんび</rt></ruby>します。","plain":"あさきづけるように、まえのひのよるにじゅんびします。","romaji":"asa kizukeru you ni, mae no hi no yoru ni junbi shimasu.","cn":"为了早上能注意到，前一天晚上做好准备。"},{"jp":"<ruby>鍵<rt>かぎ</rt></ruby>はなくさないように、<ruby>玄関<rt>げんかん</rt></ruby>の<ruby>同<rt>おな</rt></ruby>じ<ruby>場所<rt>ばしょ</rt></ruby>に<ruby>置<rt>お</rt></ruby>きます。","plain":"かぎはなくさないように、げんかんのおなじばしょにおきます。","romaji":"kagi wa nakusanai you ni, genkan no onaji basho ni okimasu.","cn":"为了不弄丢钥匙，放在玄关固定位置。"},{"jp":"<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>言葉<rt>ことば</rt></ruby>は<ruby>覚<rt>おぼ</rt></ruby>えられるように、<ruby>何度<rt>なんど</rt></ruby>も<ruby>声<rt>こえ</rt></ruby>に<ruby>出<rt>だ</rt></ruby>します。","plain":"たいせつなことばはおぼえられるように、なんどもこえにだします。","romaji":"taisetsu na kotoba wa oboerareru you ni, nando mo koe ni dashimasu.","cn":"重要的话为了能记住，反复读出声。"},{"jp":"<ruby>後<rt>うし</rt></ruby>ろの<ruby>人<rt>ひと</rt></ruby>にも<ruby>聞<rt>き</rt></ruby>こえるように、<ruby>大<rt>おお</rt></ruby>きな<ruby>声<rt>こえ</rt></ruby>で<ruby>話<rt>はな</rt></ruby>します。","plain":"うしろのひとにもきこえるように、おおきなこえではなします。","romaji":"ushiro no hito ni mo kikoeru you ni, ookii koe de hanashimasu.","cn":"为了让后面的人也能听见，用大声说话。"},{"jp":"<ruby>遅<rt>おく</rt></ruby>れないように、<ruby>普段<rt>ふだん</rt></ruby>より<ruby>早<rt>はや</rt></ruby>めに<ruby>家<rt>いえ</rt></ruby>を<ruby>出<rt>で</rt></ruby>ます。","plain":"おくれないように、ふだんよりはやめにいえをでます。","romaji":"okurenai you ni, fudan yori hayame ni ie o demasu.","cn":"为了不迟到，比平时早一点出门。"},{"jp":"<ruby>小<rt>ちい</rt></ruby>さな<ruby>習慣<rt>しゅうかん</rt></ruby>が<ruby>大<rt>おお</rt></ruby>きな<ruby>安心<rt>あんしん</rt></ruby>を<ruby>生<rt>う</rt></ruby>みます。","plain":"ちいさなしゅうかんがおおきなあんしんをうみます。","romaji":"chiisa na shuukan ga ooki na anshin o umimasu.","cn":"小习惯能带来大安心。"}]}],"dialogue":{"scene":{"jp":"友達と外国語の勉強方法について話している。","cn":"和朋友讨论外语学习方法。"},"lines":[{"speaker":"田中","jp":"<ruby>最近<rt>さいきん</rt></ruby>、<ruby>英語<rt>えいご</rt></ruby>を<ruby>勉強<rt>べんきょう</rt></ruby>するために<ruby>毎日<rt>まいにち</rt></ruby><ruby>動画<rt>どうが</rt></ruby>を<ruby>見<rt>み</rt></ruby>ているんだ。","plain":"さいきん、えいごをべんきょうするためにまいにちどうがをみているんだ。","romaji":"saikin, eigo o benkyou suru tame ni mainichi douga o miteiru n da.","cn":"最近为了学英语，每天都在看视频。"},{"speaker":"鈴木","jp":"いいね。<ruby>聞<rt>き</rt></ruby>き<ruby>取<rt>と</rt></ruby>れるようになった。","plain":"いいね。ききとれるようになった。","romaji":"ii ne. kikitoreru you ni natta.","cn":"不错啊。能听懂了吗？"},{"speaker":"田中","jp":"<ruby>少<rt>すこ</rt></ruby>しずつね。<ruby>分<rt>わ</rt></ruby>からない<ruby>言葉<rt>ことば</rt></ruby>を<ruby>忘<rt>わす</rt></ruby>れないように、ノートに<ruby>書<rt>か</rt></ruby>いている。","plain":"すこしずつね。わからないことばをわすれないように、ノートにかいている。","romaji":"sukoshi zutsu ne. wakaranai kotoba o wasurenai you ni, nooto ni kaiteiru.","cn":"一点点吧。为了不忘记不懂的词，记在笔记本上。"},{"speaker":"鈴木","jp":"<ruby>私<rt>わたし</rt></ruby>も<ruby>話<rt>はな</rt></ruby>せるようになりたいから、<ruby>毎日<rt>まいにち</rt></ruby><ruby>声<rt>こえ</rt></ruby>に<ruby>出<rt>だ</rt></ruby>すようにしている。","plain":"わたしもはなせるようになりたいから、まいにちこえにだすようにしている。","romaji":"watashi mo hanaseru you ni naritai kara, mainichi koe ni dasu you ni shiteiru.","cn":"我也想能开口说，所以每天读出声。"},{"speaker":"田中","jp":"<ruby>続<rt>つづ</rt></ruby>けるためには、<ruby>楽<rt>たの</rt></ruby>しいと<ruby>思<rt>おも</rt></ruby>える<ruby>方法<rt>ほうほう</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶのが<ruby>大切<rt>たいせつ</rt></ruby>だね。","plain":"つづけるためには、たのしいとおもえるほうほうをえらぶのがたいせつだね。","romaji":"tsuzukeru tame ni wa, tanoshii to omoeru houhou o erabu no ga taisetsu da ne.","cn":"为了能坚持下去，选觉得有趣的方法很重要。"},{"speaker":"鈴木","jp":"<ruby>本当<rt>ほんとう</rt></ruby>にそうだね。<ruby>無理<rt>むり</rt></ruby>しないように<ruby>頑張<rt>がんば</rt></ruby>ろう。","plain":"ほんとうにそうだね。むりしないようにがんばろう。","romaji":"hontou ni sou da ne. muri shinai you ni ganbarou.","cn":"真的是。我们不勉强地一起加油吧。"}]},"questions":[{"q":{"jp":"<ruby>主人公<rt>しゅじんこう</rt></ruby>は<ruby>何<rt>なに</rt></ruby>のために<ruby>習慣<rt>しゅうかん</rt></ruby>を<ruby>変<rt>か</rt></ruby>えましたか。","plain":"しゅじんこうはなにのためにしゅうかんをかえましたか。","romaji":"shujinkou wa nani no tame ni shuukan o kaemashita ka.","cn":"主人公为了什么改变了习惯？"},"a":{"jp":"<ruby>健康<rt>けんこう</rt></ruby>のために<ruby>習慣<rt>しゅうかん</rt></ruby>を<ruby>変<rt>か</rt></ruby>えました。","plain":"けんこうのためにしゅうかんをかえました。","romaji":"kenkou no tame ni shuukan o kaemashita.","cn":"为了健康改变了习惯。"}},{"q":{"jp":"よく<ruby>眠<rt>ねむ</rt></ruby>れるようにどんな<ruby>工夫<rt>くふう</rt></ruby>をしていますか。","plain":"よくねむれるようにどんなくふうをしていますか。","romaji":"yoku nemureru you ni donna kufuu o shiteimasu ka.","cn":"为了能睡好觉做了什么努力？"},"a":{"jp":"<ruby>夜<rt>よる</rt></ruby>はスマホを<ruby>見<rt>み</rt></ruby>すぎないようにしています。","plain":"よるはスマホをみすぎないようにしています。","romaji":"yoru wa sumaho o misuginai you ni shiteimasu.","cn":"注意晚上不过度看手机。"},"hint":"「ように」前接非意志动词或否定形。"},{"q":{"jp":"<ruby>田中<rt>たなか</rt></ruby>さんはなぜノートに<ruby>書<rt>か</rt></ruby>いていますか。","plain":"たなかさんはなぜノートにかいていますか。","romaji":"Tanaka-san wa naze nooto ni kaiteimasu ka.","cn":"田中为什么写在笔记本上？"},"a":{"jp":"<ruby>分<rt>わ</rt></ruby>からない<ruby>言葉<rt>ことば</rt></ruby>を<ruby>忘<rt>わす</rt></ruby>れないようにするためです。","plain":"わからないことばをわすれないようにするためです。","romaji":"wakaranai kotoba o wasurenai you ni suru tame desu.","cn":"为了不忘记不懂的词。"}},{"q":{"jp":"<ruby>長<rt>なが</rt></ruby>く<ruby>続<rt>つづ</rt></ruby>けるために<ruby>何<rt>なに</rt></ruby>が<ruby>大切<rt>たいせつ</rt></ruby>ですか。","plain":"ながくつづけるためになにがたいせつですか。","romaji":"nagaku tsuzukeru tame ni nani ga taisetsu desu ka.","cn":"为了长久坚持，什么很重要？"},"a":{"jp":"<ruby>無理<rt>むり</rt></ruby>をしないことが<ruby>大切<rt>たいせつ</rt></ruby>です。","plain":"むりをしないことがたいせつです。","romaji":"muri o shinai koto ga taisetsu desu.","cn":"不勉强很重要。"}}],"vocabulary":[{"jp":"健康","kana":"けんこう","romaji":"kenkou","meaning":"健康","pos":"名詞"},{"jp":"習慣","kana":"しゅうかん","romaji":"shuukan","meaning":"习惯","pos":"名詞"},{"jp":"変えます","kana":"かえます","romaji":"kaemasu","meaning":"改变","pos":"動詞II"},{"jp":"痩せます","kana":"やせます","romaji":"yasemasu","meaning":"变瘦","pos":"動詞II"},{"jp":"量","kana":"りょう","romaji":"ryou","meaning":"量","pos":"名詞"},{"jp":"減らします","kana":"へらします","romaji":"herashimasu","meaning":"减少","pos":"動詞I"},{"jp":"ストレス","kana":"ストレス","romaji":"sutoresu","meaning":"压力","pos":"名詞"},{"jp":"たまります","kana":"たまります","romaji":"tamarimasu","meaning":"堆积","pos":"動詞I"},{"jp":"眠れます","kana":"ねむれます","romaji":"nemuremasu","meaning":"能睡着","pos":"動詞II"},{"jp":"スマホ","kana":"スマホ","romaji":"sumaho","meaning":"智能手机","pos":"名詞"},{"jp":"野菜","kana":"やさい","romaji":"yasai","meaning":"蔬菜","pos":"名詞"},{"jp":"たっぷり","kana":"たっぷり","romaji":"tappuri","meaning":"充足","pos":"副詞"},{"jp":"変化","kana":"へんか","romaji":"henka","meaning":"变化","pos":"名詞"},{"jp":"体調","kana":"たいちょう","romaji":"taichou","meaning":"身体状况","pos":"名詞"},{"jp":"だんだん","kana":"だんだん","romaji":"dandan","meaning":"渐渐","pos":"副詞"},{"jp":"感じます","kana":"かんじます","romaji":"kanjimasu","meaning":"感觉","pos":"動詞II"},{"jp":"続けます","kana":"つづけます","romaji":"tsuzukemasu","meaning":"继续","pos":"動詞II"},{"jp":"無理","kana":"むり","romaji":"muri","meaning":"勉强","pos":"な形容詞"},{"jp":"未来","kana":"みらい","romaji":"mirai","meaning":"未来","pos":"名詞"},{"jp":"自分","kana":"じぶん","romaji":"jibun","meaning":"自己","pos":"名詞"},{"jp":"工夫","kana":"くふう","romaji":"kufuu","meaning":"巧思；窍门","pos":"名詞"},{"jp":"カレンダー","kana":"カレンダー","romaji":"karendaa","meaning":"日历","pos":"名詞"},{"jp":"登録します","kana":"とうろくします","romaji":"touroku shimasu","meaning":"登记","pos":"動詞III"},{"jp":"気づきます","kana":"きづきます","romaji":"kizukimasu","meaning":"注意到","pos":"動詞I"},{"jp":"鍵","kana":"かぎ","romaji":"kagi","meaning":"钥匙","pos":"名詞"},{"jp":"なくします","kana":"なくします","romaji":"nakushimasu","meaning":"弄丢","pos":"動詞I"},{"jp":"玄関","kana":"げんかん","romaji":"genkan","meaning":"玄关","pos":"名詞"},{"jp":"声に出します","kana":"こえにだします","romaji":"koe ni dashimasu","meaning":"读出声","pos":"慣用句"},{"jp":"聞こえます","kana":"きこえます","romaji":"kikoemasu","meaning":"听得见","pos":"動詞II"},{"jp":"早めに","kana":"はやめに","romaji":"hayame ni","meaning":"早点","pos":"副詞"},{"jp":"安心","kana":"あんしん","romaji":"anshin","meaning":"安心","pos":"名詞"},{"jp":"動画","kana":"どうが","romaji":"douga","meaning":"视频","pos":"名詞"},{"jp":"聞き取れます","kana":"ききとれます","romaji":"kikitoremasu","meaning":"能听懂","pos":"動詞II"},{"jp":"方法","kana":"ほうほう","romaji":"houhou","meaning":"方法","pos":"名詞"},{"jp":"選びます","kana":"えらびます","romaji":"erabimasu","meaning":"选择","pos":"動詞I"}],"grammar":[{"pattern":"V（意志） + ために、〜","name":"〜ために（目的）","explain":"前接意志动词的辞书形或名词+の，表示为了达成某个目的而做某事。前后句的主语必须一致。多用于自己有意识、能控制的目标。N + の + ために 也可表示「为了某人/某事」。注意与「ために（原因）」的语境区分，但N3阶段以目的用法为主。","examples":[{"jp":"<ruby>留学<rt>りゅうがく</rt></ruby>するためにお<ruby>金<rt>かね</rt></ruby>をためています。","plain":"りゅうがくするためにおかねをためています。","cn":"为了留学在存钱。"},{"jp":"<ruby>家族<rt>かぞく</rt></ruby>のために<ruby>働<rt>はたら</rt></ruby>いています。","plain":"かぞくのためにはたらいています。","cn":"为了家人而工作。"}]},{"pattern":"V（非意志/可能/否定） + ように、〜","name":"〜ように（目的）","explain":"前接非意志动词、可能形、或否定形，表示「为了能.../为了不...」。和「ために」最大的区别是动词性质：「ために」前是说话人能主动做的动作（留学する、勉強する），「ように」前是无法主动控制的状态（聞こえる、忘れない、できる）。前后主语不必一致。","examples":[{"jp":"<ruby>忘<rt>わす</rt></ruby>れないようにメモします。","plain":"わすれないようにメモします。","cn":"为了不忘记记笔记。"},{"jp":"<ruby>後<rt>うし</rt></ruby>ろの<ruby>席<rt>せき</rt></ruby>でも<ruby>聞<rt>き</rt></ruby>こえるように<ruby>大<rt>おお</rt></ruby>きな<ruby>声<rt>こえ</rt></ruby>で<ruby>話<rt>はな</rt></ruby>します。","plain":"うしろのせきでもきこえるようにおおきなこえではなします。","cn":"为了后排也听得见用大声说。"}]},{"pattern":"V る/V ない + ようにする","name":"〜ようにする（努力做）","explain":"表示说话人有意识地做某事或避免做某事，是一种「自我努力的习惯」。和单纯的「〜ます」相比，强调主观决心。常用否定形「〜ないようにする」表示「努力不...」。注意它和下一课的「ようになる」（自然变化）不同。","examples":[{"jp":"<ruby>毎日<rt>まいにち</rt></ruby><ruby>運動<rt>うんどう</rt></ruby>するようにしています。","plain":"まいにちうんどうするようにしています。","cn":"坚持每天运动。"},{"jp":"<ruby>遅<rt>おく</rt></ruby>れないようにしてください。","plain":"おくれないようにしてください。","cn":"请努力别迟到。"}]},{"pattern":"N + のために","name":"为了某人/某事","explain":"名词后加「のために」表示「为了...的利益/目的」。受益者多为人，也可以是抽象目标（健康・将来等）。语气比「に」更明确地表示「为了对方着想」。","examples":[{"jp":"<ruby>子供<rt>こども</rt></ruby>のために<ruby>頑張<rt>がんば</rt></ruby>ります。","plain":"こどものためにがんばります。","cn":"为了孩子加油。"}]},{"pattern":"V る + ためには、〜","name":"为了...的话","explain":"在「ために」后加「は」表示强调或对比，常用于书面或郑重表达，引出实现目标所需的条件。「〜ためには〜が必要だ／大切だ」是常见搭配。","examples":[{"jp":"<ruby>夢<rt>ゆめ</rt></ruby>を<ruby>叶<rt>かな</rt></ruby>えるためには<ruby>努力<rt>どりょく</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>です。","plain":"ゆめをかなえるためにはどりょくがひつようです。","cn":"为了实现梦想，需要努力。"}]}]},"prev":{"id":32,"title":"時を表す表現"},"next":{"id":34,"title":"結果と変化"}}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('lesson-data').textContent);
+  const lesson = data.lesson;
+  const prev = data.prev; // { id, title } | null
+  const next = data.next;
+
+  // Flatten "playable" sentences for the global play-all queue.
+  // group: 'main-N' / 'sub-N' / 'dialogue' (each has its own DOM nodes)
+  const playableGroups = []; // [{ groupId, items: [{ plain, el }] }]
+
+  // ---------- Masthead / nav ----------
+  const lessonNo = String(lesson.id).padStart(2, '0');
+  document.title = lesson.level + ' · 第' + lesson.id + '課 — ' + stripTags(lesson.title.jp);
+  document.getElementById('m-level').textContent = lesson.level + ' — Lesson ' + lessonNo;
+  document.getElementById('m-title-jp').innerHTML = lesson.title.jp;
+  document.getElementById('m-title-en').textContent = lesson.title.romaji + ' · ' + lesson.title.en;
+  document.getElementById('m-lesson-no').textContent = '第 ' + lesson.id + ' 課';
+  document.getElementById('footer-meta').textContent = '日本語 ' + lesson.level + ' · 第' + lesson.id + '課';
+
+  const navEl = document.getElementById('lesson-nav');
+  const navParts = [];
+  navParts.push('<a href="index.html">← 索引</a>');
+  navParts.push('<span>/</span>');
+  if (prev) {
+    navParts.push('<a href="lesson-' + String(prev.id).padStart(2, '0') + '.html">第' + prev.id + '課</a>');
+    navParts.push('<span>/</span>');
+  }
+  navParts.push('<span class="current">第' + lesson.id + '課</span>');
+  if (next) {
+    navParts.push('<span>/</span>');
+    navParts.push('<a href="lesson-' + String(next.id).padStart(2, '0') + '.html">第' + next.id + '課 →</a>');
+  }
+  navEl.innerHTML = navParts.join(' ');
+
+  // ---------- Goals ----------
+  const goalsList = document.getElementById('goals-list');
+  if (lesson.goals && lesson.goals.length) {
+    lesson.goals.forEach(g => {
+      const li = document.createElement('li');
+      li.textContent = g;
+      goalsList.appendChild(li);
+    });
+  } else {
+    document.getElementById('goals-block').hidden = true;
+  }
+
+  // ---------- Articles ----------
+  const articlesEl = document.getElementById('articles');
+  lesson.articles.forEach((article, ai) => {
+    const wrap = document.createElement('article');
+    wrap.className = 'article';
+    const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
+    wrap.id = 'article-' + groupId;
+
+    const meta = document.createElement('div');
+    meta.className = 'article-meta';
+    meta.textContent = article.kind === 'main' ? '主篇 · main reading' : '配篇 · companion reading';
+    wrap.appendChild(meta);
+
+    const h2 = document.createElement('h2');
+    h2.className = 'article-title';
+    h2.innerHTML = article.title.jp + '<span class="ja-small">' + escapeHtml(article.title.cn) + '</span>';
+    wrap.appendChild(h2);
+
+    const items = [];
+    article.sentences.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'sentence';
+      div.dataset.group = groupId;
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="jp-text">' + s.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(s.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(s.cn) + '</div>';
+      wrap.appendChild(div);
+      items.push({ plain: s.plain, el: div });
+    });
+
+    articlesEl.appendChild(wrap);
+    playableGroups.push({ groupId, items });
+  });
+
+  // ---------- Dialogue ----------
+  if (lesson.dialogue && lesson.dialogue.lines && lesson.dialogue.lines.length) {
+    document.getElementById('dialogue-divider').hidden = false;
+    document.getElementById('dialogue-block').hidden = false;
+    const sceneEl = document.getElementById('dialogue-scene');
+    sceneEl.textContent = lesson.dialogue.scene.jp + ' / ' + lesson.dialogue.scene.cn;
+    const linesEl = document.getElementById('dialogue-lines');
+    const items = [];
+    lesson.dialogue.lines.forEach((line, i) => {
+      const div = document.createElement('div');
+      div.className = 'dialogue-line';
+      div.dataset.group = 'dialogue';
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="speaker">' + escapeHtml(line.speaker) + '</div>' +
+        '<div class="jp-text">' + line.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(line.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(line.cn) + '</div>';
+      linesEl.appendChild(div);
+      items.push({ plain: line.plain, el: div });
+    });
+    playableGroups.push({ groupId: 'dialogue', items });
+  }
+
+  // ---------- Questions ----------
+  if (lesson.questions && lesson.questions.length) {
+    document.getElementById('questions-divider').hidden = false;
+    const qBlock = document.getElementById('questions-block');
+    qBlock.hidden = false;
+    lesson.questions.forEach((qa, i) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerHTML =
+        '<div class="question-q">' +
+          '<span class="q-mark">Q' + (i + 1) + '</span>' +
+          '<div class="jp-text">' + qa.q.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.q.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.q.cn) + '</div>' +
+        '</div>' +
+        '<div class="question-a">' +
+          '<span class="q-mark">A</span>' +
+          '<div class="jp-text">' + qa.a.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.a.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.a.cn) + '</div>' +
+          (qa.hint ? '<div class="question-hint">提示：' + escapeHtml(qa.hint) + '</div>' : '') +
+        '</div>';
+      qBlock.appendChild(div);
+    });
+  }
+
+  // ---------- Vocabulary ----------
+  const vocabGrid = document.getElementById('vocab-grid');
+  lesson.vocabulary.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'vocab-item';
+    div.innerHTML =
+      '<div class="vocab-jp">' + escapeHtml(v.jp) + (v.pos ? '<span class="vocab-pos">' + escapeHtml(v.pos) + '</span>' : '') + '</div>' +
+      '<div class="vocab-kana">' + escapeHtml(v.kana) + '</div>' +
+      '<div class="vocab-romaji">' + escapeHtml(v.romaji) + '</div>' +
+      '<div class="vocab-meaning">' + escapeHtml(v.meaning) + '</div>';
+    vocabGrid.appendChild(div);
+  });
+
+  // ---------- Grammar ----------
+  const grammarNotes = document.getElementById('grammar-notes');
+  lesson.grammar.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'grammar-point';
+    let ex = '';
+    if (g.examples && g.examples.length) {
+      ex = '<div class="grammar-examples">' +
+        g.examples.map(e =>
+          '<div class="grammar-example">' +
+            '<div class="ex-jp">' + e.jp + '</div>' +
+            '<div class="ex-cn">' + escapeHtml(e.cn) + '</div>' +
+          '</div>'
+        ).join('') +
+        '</div>';
+    }
+    div.innerHTML =
+      '<div><span class="grammar-pattern">' + escapeHtml(g.pattern) + '</span>' +
+      '<span class="grammar-name">' + escapeHtml(g.name) + '</span></div>' +
+      '<div class="grammar-explain">' + escapeHtml(g.explain) + '</div>' +
+      ex;
+    grammarNotes.appendChild(div);
+  });
+
+  // ---------- Toggles ----------
+  document.querySelectorAll('.toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.toggle;
+      const state = btn.dataset.state;
+      document.querySelectorAll('.toggle[data-toggle="' + type + '"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (state === 'off') document.body.classList.add('hide-' + type);
+      else document.body.classList.remove('hide-' + type);
+    });
+  });
+
+  // ---------- Speech ----------
+  const synth = window.speechSynthesis;
+  let jaVoice = null;
+  const ttsStatus = document.getElementById('tts-status');
+  const nowReading = document.getElementById('now-reading');
+  const speedSelect = document.getElementById('speed-select');
+
+  function pickJapaneseVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    const preferred = voices.find(v => v.lang === 'ja-JP' && /Kyoko|Otoya|O-ren|Google/i.test(v.name));
+    jaVoice = preferred || voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) {
+      ttsStatus.textContent = '音声 · ' + jaVoice.name.split(' ')[0];
+      ttsStatus.classList.remove('unavailable');
+    } else {
+      ttsStatus.textContent = '音声 · 未対応';
+      ttsStatus.classList.add('unavailable');
+    }
+  }
+
+  if (synth) {
+    pickJapaneseVoice();
+    synth.onvoiceschanged = pickJapaneseVoice;
+  } else {
+    ttsStatus.textContent = '音声 · 未対応';
+    ttsStatus.classList.add('unavailable');
+  }
+
+  let queue = [];
+  let isPlaying = false;
+
+  function speak(text, onEnd) {
+    if (!synth) { onEnd && onEnd(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = parseFloat(speedSelect.value);
+    u.pitch = 1.0;
+    u.onend = () => onEnd && onEnd();
+    u.onerror = () => onEnd && onEnd();
+    synth.speak(u);
+  }
+
+  function clearPlaying() {
+    document.querySelectorAll('.sentence.playing, .dialogue-line.playing').forEach(s => s.classList.remove('playing'));
+  }
+
+  function findItem(groupId, index) {
+    const g = playableGroups.find(g => g.groupId === groupId);
+    return g ? g.items[index] : null;
+  }
+
+  function playItem(groupId, index) {
+    if (!synth) return;
+    synth.cancel();
+    clearPlaying();
+    const item = findItem(groupId, index);
+    if (!item) return;
+    item.el.classList.add('playing');
+    nowReading.textContent = item.plain;
+    speak(item.plain, () => {
+      item.el.classList.remove('playing');
+      if (queue.length > 0) {
+        const next = queue.shift();
+        playItem(next.group, next.index);
+      } else {
+        isPlaying = false;
+        nowReading.textContent = '完了 / done';
+      }
+    });
+  }
+
+  document.querySelectorAll('.sentence, .dialogue-line').forEach(el => {
+    el.addEventListener('click', () => {
+      queue = [];
+      isPlaying = true;
+      playItem(el.dataset.group, parseInt(el.dataset.index, 10));
+    });
+  });
+
+  document.getElementById('play-all').addEventListener('click', () => {
+    if (!synth) return;
+    if (isPlaying) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+      nowReading.textContent = '一時停止 / paused';
+      return;
+    }
+    queue = [];
+    playableGroups.forEach(g => {
+      g.items.forEach((_, i) => queue.push({ group: g.groupId, index: i }));
+    });
+    if (queue.length === 0) return;
+    isPlaying = true;
+    const first = queue.shift();
+    playItem(first.group, first.index);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && synth) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+    }
+  });
+
+  // ---------- helpers ----------
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function stripTags(s) { return String(s).replace(/<[^>]*>/g, ''); }
+})();
+</script>
+</body>
+</html>

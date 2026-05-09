@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 · 第37課 — 推測の確信度</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #F5F1E8;
+    --bg-elevated: #FAF8F3;
+    --bg-overlay: #FFFEF9;
+    --fg-primary: #2A2620;
+    --fg-secondary: #5C544A;
+    --fg-tertiary: #8C8275;
+    --border-subtle: rgba(42, 38, 32, 0.08);
+    --border-default: rgba(42, 38, 32, 0.14);
+    --accent: #A8895C;
+    --accent-hover: #B89968;
+    --accent-soft: rgba(168, 137, 92, 0.12);
+
+    --serif-jp: "Noto Serif JP", serif;
+    --sans-jp: "Noto Sans JP", sans-serif;
+    --sans-en: "IBM Plex Sans", sans-serif;
+    --mono: "IBM Plex Mono", monospace;
+
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-base);
+    color: var(--fg-primary);
+    font-family: var(--sans-jp);
+    font-size: 14px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(168, 137, 92, 0.04) 0%, transparent 50%),
+      radial-gradient(at 80% 90%, rgba(168, 137, 92, 0.03) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* Header */
+  .masthead {
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .masthead-title {
+    font-family: var(--serif-jp);
+    font-weight: 500;
+  }
+
+  .masthead-title .level {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .masthead-title .title-jp {
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--fg-primary);
+  }
+
+  .masthead-title .title-en {
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .masthead-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* Goals */
+  .goals {
+    background: var(--bg-elevated);
+    border-left: 2px solid var(--accent);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .goals-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .goals ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .goals li {
+    font-size: 12px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+  }
+
+  /* Lesson nav */
+  .lesson-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.05em;
+  }
+
+  .lesson-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms var(--ease);
+  }
+
+  .lesson-nav a:hover { border-bottom-color: var(--accent); }
+
+  .lesson-nav .current { color: var(--fg-secondary); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .control-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .toggle-group {
+    display: inline-flex;
+    border: 1px solid var(--border-default);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .toggle {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    border-right: 1px solid var(--border-default);
+  }
+
+  .toggle:last-child { border-right: none; }
+
+  .toggle:hover { color: var(--fg-primary); }
+
+  .toggle.active {
+    background: var(--accent);
+    color: var(--bg-overlay);
+  }
+
+  .speed-select {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  /* Audio control */
+  .audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    margin-bottom: 40px;
+  }
+
+  .play-btn {
+    background: var(--fg-primary);
+    color: var(--bg-overlay);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 200ms var(--ease);
+    flex-shrink: 0;
+  }
+
+  .play-btn:hover { background: var(--accent); }
+
+  .play-btn svg { width: 14px; height: 14px; }
+
+  .audio-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .audio-info-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: 2px;
+  }
+
+  .audio-info-text {
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Article */
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .article-title {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .article-title .ja-small {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-left: 12px;
+    font-weight: 400;
+    font-family: var(--sans-en);
+    font-style: italic;
+  }
+
+  .article + .article {
+    margin-top: 48px;
+  }
+
+  /* Sentence */
+  .sentence {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 200ms var(--ease);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .sentence:hover { background: var(--accent-soft); }
+  .sentence.playing { background: var(--accent-soft); }
+
+  .sentence.playing::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .jp-text {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    line-height: 2.1;
+    color: var(--fg-primary);
+    letter-spacing: 0.02em;
+  }
+
+  /* Furigana via ruby */
+  ruby { ruby-position: over; }
+
+  rt {
+    font-family: var(--sans-jp);
+    font-size: 0.5em;
+    color: var(--fg-tertiary);
+    font-weight: 400;
+    letter-spacing: 0;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-furigana rt { opacity: 0; }
+
+  .romaji {
+    font-family: var(--sans-en);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    line-height: 1.6;
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-romaji .romaji { display: none; }
+
+  .translation {
+    font-family: var(--sans-jp);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  body.hide-translation .translation { display: none; }
+
+  /* Dialogue */
+  .dialogue-scene {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border-radius: 2px;
+  }
+
+  .dialogue-line { padding: 12px 0 12px 16px; border-bottom: 1px solid var(--border-subtle); border-left: 2px solid transparent; cursor: pointer; transition: all 200ms var(--ease); margin: 0 -16px; padding-right: 16px; }
+  .dialogue-line:hover { background: var(--accent-soft); border-left-color: var(--accent); }
+  .dialogue-line.playing { background: var(--accent-soft); border-left-color: var(--accent); }
+
+  .speaker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* Questions */
+  .question {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .question-q { margin-bottom: 8px; }
+  .question-a { padding-left: 16px; border-left: 2px solid var(--accent-soft); margin-top: 6px; }
+  .q-mark { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .question-hint {
+    font-family: var(--sans-jp);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* Notes section */
+  .section-divider {
+    margin: 64px 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-default);
+  }
+
+  .section-divider-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+
+  .vocab-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+
+  .vocab-item {
+    display: grid;
+    grid-template-columns: minmax(80px, 0.9fr) minmax(100px, 1fr) minmax(60px, 0.5fr) 2fr;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: baseline;
+  }
+
+  .vocab-jp { font-family: var(--serif-jp); font-size: 15px; color: var(--fg-primary); }
+  .vocab-kana { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-secondary); }
+  .vocab-romaji { font-family: var(--sans-en); font-style: italic; font-size: 12px; color: var(--fg-tertiary); }
+  .vocab-meaning { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); }
+  .vocab-pos { font-family: var(--mono); font-size: 9px; color: var(--accent); margin-left: 6px; letter-spacing: 0.05em; }
+
+  .grammar-point { padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .grammar-pattern { font-family: var(--mono); font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 2px; display: inline-block; margin-bottom: 8px; }
+  .grammar-name { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-tertiary); margin-left: 8px; }
+  .grammar-explain { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); line-height: 1.75; margin-bottom: 10px; }
+  .grammar-examples { background: var(--bg-elevated); padding: 10px 14px; border-radius: 2px; font-size: 13px; }
+  .grammar-example { padding: 4px 0; }
+  .grammar-example .ex-jp { font-family: var(--serif-jp); color: var(--fg-primary); }
+  .grammar-example .ex-cn { font-size: 11px; color: var(--fg-tertiary); margin-top: 2px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-default);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .tts-status { font-family: var(--mono); font-size: 10px; color: var(--fg-tertiary); letter-spacing: 0.05em; }
+  .tts-status.unavailable { color: #8B4513; }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 20px 64px; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead-meta { text-align: left; }
+    .jp-text { font-size: 17px; }
+    .vocab-item { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+    .controls { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <nav class="lesson-nav" id="lesson-nav"></nav>
+
+    <header class="masthead">
+      <div class="masthead-title">
+        <span class="level" id="m-level"></span>
+        <h1 class="title-jp" id="m-title-jp"></h1>
+        <div class="title-en" id="m-title-en"></div>
+      </div>
+      <div class="masthead-meta">
+        <div id="m-lesson-no"></div>
+        <div id="tts-status" class="tts-status">音声 · loading…</div>
+      </div>
+    </header>
+
+    <div class="goals" id="goals-block">
+      <div class="goals-label">学習目標 · goals</div>
+      <ul id="goals-list"></ul>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">Furigana</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="furigana" data-state="on">On</button>
+          <button class="toggle" data-toggle="furigana" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Romaji</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="romaji" data-state="on">On</button>
+          <button class="toggle" data-toggle="romaji" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">中文</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="translation" data-state="on">On</button>
+          <button class="toggle" data-toggle="translation" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Speed</span>
+        <select class="speed-select" id="speed-select">
+          <option value="0.7">0.7×</option>
+          <option value="0.85" selected>0.85×</option>
+          <option value="1.0">1.0×</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="audio-bar">
+      <button class="play-btn" id="play-all" aria-label="播放全文">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="audio-info">
+        <div class="audio-info-label">Now reading</div>
+        <div class="audio-info-text" id="now-reading">クリックで再生 / Click sentence to play</div>
+      </div>
+    </div>
+
+    <div id="articles"></div>
+
+    <div class="section-divider" id="dialogue-divider" hidden>
+      <span class="section-divider-text">対話 · dialogue</span>
+    </div>
+    <section id="dialogue-block" hidden>
+      <div class="dialogue-scene" id="dialogue-scene"></div>
+      <div id="dialogue-lines"></div>
+    </section>
+
+    <div class="section-divider" id="questions-divider" hidden>
+      <span class="section-divider-text">理解問題 · comprehension</span>
+    </div>
+    <section id="questions-block" hidden></section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">語彙 · vocabulary</span>
+    </div>
+    <section class="notes">
+      <div class="vocab-grid" id="vocab-grid"></div>
+    </section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">文法 · grammar</span>
+    </div>
+    <section class="notes" id="grammar-notes"></section>
+
+    <footer class="footer">
+      <span id="footer-meta"></span>
+      <span>web speech api</span>
+    </footer>
+
+  </div>
+
+<script id="lesson-data" type="application/json">{"lesson":{"id":37,"level":"N3","title":{"jp":"推測の確信度","romaji":"suisoku no kakushindo","cn":"推测的把握度","en":"Degrees of Inference"},"goals":["掌握「わけだ」表达事理推论的用法","区分「わけがない」与「はずがない」的语感差异","能用「はず」表达预期与判断"],"articles":[{"kind":"main","title":{"jp":"彼が来ないわけ","romaji":"kare ga konai wake","cn":"他不来的原因"},"sentences":[{"jp":"<ruby>今日<rt>きょう</rt></ruby>のパーティーに<ruby>田中<rt>たなか</rt></ruby>さんが<ruby>来<rt>き</rt></ruby>ていません。","plain":"きょうのパーティーにたなかさんがきていません。","romaji":"kyou no paatii ni Tanaka-san ga kiteimasen.","cn":"今天的派对田中没来。"},{"jp":"<ruby>彼<rt>かれ</rt></ruby>は<ruby>必<rt>かなら</rt></ruby>ず<ruby>来<rt>く</rt></ruby>ると<ruby>言<rt>い</rt></ruby>っていたはずです。","plain":"かれはかならずくるといっていたはずです。","romaji":"kare wa kanarazu kuru to itteita hazu desu.","cn":"他应该说过一定来。"},{"jp":"<ruby>後<rt>あと</rt></ruby>から<ruby>聞<rt>き</rt></ruby>くと、<ruby>仕事<rt>しごと</rt></ruby>が<ruby>急<rt>きゅう</rt></ruby>に<ruby>入<rt>はい</rt></ruby>ったそうです。","plain":"あとからきくと、しごとがきゅうにはいったそうです。","romaji":"ato kara kiku to, shigoto ga kyuu ni haitta sou desu.","cn":"后来听说，临时有了工作。"},{"jp":"なるほど、<ruby>来<rt>こ</rt></ruby>られなかったわけです。","plain":"なるほど、こられなかったわけです。","romaji":"naruhodo, korarenakatta wake desu.","cn":"原来如此，所以没能来。"},{"jp":"でも、<ruby>連絡<rt>れんらく</rt></ruby>がないわけがないと<ruby>思<rt>おも</rt></ruby>っていました。","plain":"でも、れんらくがないわけがないとおもっていました。","romaji":"demo, renraku ga nai wake ga nai to omotteimashita.","cn":"不过，原以为不可能没联系。"},{"jp":"<ruby>彼<rt>かれ</rt></ruby>はメールを<ruby>送<rt>おく</rt></ruby>ったそうですが、<ruby>私<rt>わたし</rt></ruby>のスマホが<ruby>受信<rt>じゅしん</rt></ruby>できないわけだったのです。","plain":"かれはメールをおくったそうですが、わたしのスマホがじゅしんできないわけだったのです。","romaji":"kare wa meeru o okutta sou desu ga, watashi no sumaho ga jushin dekinai wake datta no desu.","cn":"他说发了邮件，原来是我的手机收不到。"},{"jp":"<ruby>連絡<rt>れんらく</rt></ruby>が<ruby>取<rt>と</rt></ruby>れないわけではなく、ただ<ruby>遅<rt>おく</rt></ruby>れていただけでした。","plain":"れんらくがとれないわけではなく、ただおくれていただけでした。","romaji":"renraku ga torenai wake de wa naku, tada okurete ita dake deshita.","cn":"并不是联系不上，只是延迟了。"},{"jp":"<ruby>彼<rt>かれ</rt></ruby>のことだから、<ruby>誤解<rt>ごかい</rt></ruby>を<ruby>放<rt>ほう</rt></ruby>っておくはずがありません。","plain":"かれのことだから、ごかいをほうっておくはずがありません。","romaji":"kare no koto da kara, gokai o houtte oku hazu ga arimasen.","cn":"以他的为人，不可能放任误解不管。"},{"jp":"<ruby>翌日<rt>よくじつ</rt></ruby>、<ruby>彼<rt>かれ</rt></ruby>から<ruby>長<rt>なが</rt></ruby>い<ruby>謝罪<rt>しゃざい</rt></ruby>のメッセージが<ruby>届<rt>とど</rt></ruby>きました。","plain":"よくじつ、かれからながいしゃざいのメッセージがとどきました。","romaji":"yokujitsu, kare kara nagai shazai no messeeji ga todokimashita.","cn":"第二天，收到了他长长的道歉信息。"},{"jp":"やっぱり、<ruby>誠実<rt>せいじつ</rt></ruby>な<ruby>人<rt>ひと</rt></ruby>だと<ruby>改<rt>あらた</rt></ruby>めて<ruby>感<rt>かん</rt></ruby>じました。","plain":"やっぱり、せいじつなひとだとあらためてかんじました。","romaji":"yappari, seijitsu na hito da to aratamete kanjimashita.","cn":"果然是个诚实的人，再次感受到了。"},{"jp":"<ruby>誤解<rt>ごかい</rt></ruby>はすぐに<ruby>解<rt>と</rt></ruby>けるものだと<ruby>思<rt>おも</rt></ruby>います。","plain":"ごかいはすぐにとけるものだとおもいます。","romaji":"gokai wa sugu ni tokeru mono da to omoimasu.","cn":"我觉得误解是会很快化解的。"}]},{"kind":"companion","title":{"jp":"そんなはずはない","romaji":"sonna hazu wa nai","cn":"不可能这样"},"sentences":[{"jp":"<ruby>朝<rt>あさ</rt></ruby>、<ruby>財布<rt>さいふ</rt></ruby>がないことに<ruby>気<rt>き</rt></ruby>づきました。","plain":"あさ、さいふがないことにきづきました。","romaji":"asa, saifu ga nai koto ni kizukimashita.","cn":"早上发现钱包不见了。"},{"jp":"そんなはずはありません。<ruby>昨日<rt>きのう</rt></ruby><ruby>確<rt>たし</rt></ruby>かにかばんに<ruby>入<rt>い</rt></ruby>れたはずです。","plain":"そんなはずはありません。きのうたしかにかばんにいれたはずです。","romaji":"sonna hazu wa arimasen. kinou tashika ni kaban ni ireta hazu desu.","cn":"不可能。昨天确实放进包里了。"},{"jp":"<ruby>家<rt>いえ</rt></ruby>の<ruby>中<rt>なか</rt></ruby>のあちこちを<ruby>探<rt>さが</rt></ruby>しましたが、<ruby>見<rt>み</rt></ruby>つかりません。","plain":"いえのなかのあちこちをさがしましたが、みつかりません。","romaji":"ie no naka no achikochi o sagashimashita ga, mitsukarimasen.","cn":"在家里到处找，没找到。"},{"jp":"<ruby>誰<rt>だれ</rt></ruby>かが<ruby>持<rt>も</rt></ruby>って<ruby>行<rt>い</rt></ruby>くわけがないので、<ruby>家<rt>いえ</rt></ruby>のどこかにあるはずです。","plain":"だれかがもっていくわけがないので、いえのどこかにあるはずです。","romaji":"dareka ga motte iku wake ga nai node, ie no doko ka ni aru hazu desu.","cn":"不可能有人拿走，应该在家里某处。"},{"jp":"<ruby>結局<rt>けっきょく</rt></ruby>、ソファーの<ruby>下<rt>した</rt></ruby>から<ruby>出<rt>で</rt></ruby>てきました。","plain":"けっきょく、ソファーのしたからでてきました。","romaji":"kekkyoku, sofaa no shita kara dete kimashita.","cn":"结果从沙发下面出来了。"},{"jp":"なるほど、ここに<ruby>落<rt>お</rt></ruby>ちたわけですね。","plain":"なるほど、ここにおちたわけですね。","romaji":"naruhodo, koko ni ochita wake desu ne.","cn":"原来如此，掉到这里了。"},{"jp":"<ruby>記憶<rt>きおく</rt></ruby>はあてにならないこともあるわけです。","plain":"きおくはあてにならないこともあるわけです。","romaji":"kioku wa ate ni naranai koto mo aru wake desu.","cn":"看来记忆有时是靠不住的。"},{"jp":"これからは<ruby>同<rt>おな</rt></ruby>じ<ruby>場所<rt>ばしょ</rt></ruby>に<ruby>必<rt>かなら</rt></ruby>ず<ruby>置<rt>お</rt></ruby>くようにします。","plain":"これからはおなじばしょにかならずおくようにします。","romaji":"kore kara wa onaji basho ni kanarazu oku you ni shimasu.","cn":"今后一定要放在同一个地方。"}]}],"dialogue":{"scene":{"jp":"友達が状況の原因を分析している。","cn":"朋友分析状况的原因。"},"lines":[{"speaker":"木村","jp":"<ruby>佐々木<rt>ささき</rt></ruby>さんが<ruby>最近<rt>さいきん</rt></ruby><ruby>元気<rt>げんき</rt></ruby>がないみたい。","plain":"ささきさんがさいきんげんきがないみたい。","romaji":"Sasaki-san ga saikin genki ga nai mitai.","cn":"佐佐木最近好像没精神。"},{"speaker":"林","jp":"<ruby>仕事<rt>しごと</rt></ruby>が<ruby>大変<rt>たいへん</rt></ruby>なはずだから、<ruby>疲<rt>つか</rt></ruby>れているわけだ。","plain":"しごとがたいへんなはずだから、つかれているわけだ。","romaji":"shigoto ga taihen na hazu da kara, tsukareteiru wake da.","cn":"工作肯定很累，所以才疲倦。"},{"speaker":"木村","jp":"でも、<ruby>誰<rt>だれ</rt></ruby>にも<ruby>相談<rt>そうだん</rt></ruby>しないはずがないよね。","plain":"でも、だれにもそうだんしないはずがないよね。","romaji":"demo, dare ni mo soudan shinai hazu ga nai yo ne.","cn":"不过，他不可能不找人商量吧。"},{"speaker":"林","jp":"<ruby>性格<rt>せいかく</rt></ruby><ruby>的<rt>てき</rt></ruby>に、<ruby>一人<rt>ひとり</rt></ruby>で<ruby>悩<rt>なや</rt></ruby>みを<ruby>抱<rt>かか</rt></ruby>えるわけではないと<ruby>思<rt>おも</rt></ruby>う。","plain":"せいかくてきに、ひとりでなやみをかかえるわけではないとおもう。","romaji":"seikaku-teki ni, hitori de nayami o kakaeru wake de wa nai to omou.","cn":"从性格看，不会一个人扛烦恼。"},{"speaker":"木村","jp":"じゃあ、<ruby>今度<rt>こんど</rt></ruby><ruby>食事<rt>しょくじ</rt></ruby>に<ruby>誘<rt>さそ</rt></ruby>って、<ruby>話<rt>はな</rt></ruby>を<ruby>聞<rt>き</rt></ruby>いてみよう。","plain":"じゃあ、こんどしょくじにさそって、はなしをきいてみよう。","romaji":"jaa, kondo shokuji ni sasotte, hanashi o kiite miyou.","cn":"那下次约他吃饭，听听他说什么吧。"},{"speaker":"林","jp":"うん、<ruby>友達<rt>ともだち</rt></ruby>に<ruby>頼<rt>たよ</rt></ruby>られないわけがないからね。","plain":"うん、ともだちにたよられないわけがないからね。","romaji":"un, tomodachi ni tayorarenai wake ga nai kara ne.","cn":"嗯，朋友不可能不依靠的。"}]},"questions":[{"q":{"jp":"<ruby>田中<rt>たなか</rt></ruby>さんはなぜ<ruby>来<rt>こ</rt></ruby>られませんでしたか。","plain":"たなかさんはなぜこられませんでしたか。","romaji":"Tanaka-san wa naze koraremasen deshita ka.","cn":"田中为什么没能来？"},"a":{"jp":"<ruby>仕事<rt>しごと</rt></ruby>が<ruby>急<rt>きゅう</rt></ruby>に<ruby>入<rt>はい</rt></ruby>ったわけです。","plain":"しごとがきゅうにはいったわけです。","romaji":"shigoto ga kyuu ni haitta wake desu.","cn":"原来是临时有了工作。"}},{"q":{"jp":"<ruby>連絡<rt>れんらく</rt></ruby>がなかったのはなぜですか。","plain":"れんらくがなかったのはなぜですか。","romaji":"renraku ga nakatta no wa naze desu ka.","cn":"为什么没收到联系？"},"a":{"jp":"<ruby>私<rt>わたし</rt></ruby>のスマホが<ruby>受信<rt>じゅしん</rt></ruby>できないわけだったのです。","plain":"わたしのスマホがじゅしんできないわけだったのです。","romaji":"watashi no sumaho ga jushin dekinai wake datta no desu.","cn":"原来是我的手机收不到。"},"hint":"「わけ」表事理推论。"},{"q":{"jp":"<ruby>財布<rt>さいふ</rt></ruby>はどこにありましたか。","plain":"さいふはどこにありましたか。","romaji":"saifu wa doko ni arimashita ka.","cn":"钱包在哪里？"},"a":{"jp":"ソファーの<ruby>下<rt>した</rt></ruby>にありました。","plain":"ソファーのしたにありました。","romaji":"sofaa no shita ni arimashita.","cn":"在沙发下面。"}},{"q":{"jp":"<ruby>佐々木<rt>ささき</rt></ruby>さんはなぜ<ruby>元気<rt>げんき</rt></ruby>がありませんか。","plain":"ささきさんはなぜげんきがありませんか。","romaji":"Sasaki-san wa naze genki ga arimasen ka.","cn":"佐佐木为什么没精神？"},"a":{"jp":"<ruby>仕事<rt>しごと</rt></ruby>が<ruby>大変<rt>たいへん</rt></ruby>で<ruby>疲<rt>つか</rt></ruby>れているわけです。","plain":"しごとがたいへんでつかれているわけです。","romaji":"shigoto ga taihen de tsukareteiru wake desu.","cn":"是因为工作累所以疲倦。"}}],"vocabulary":[{"jp":"パーティー","kana":"パーティー","romaji":"paatii","meaning":"派对","pos":"名詞"},{"jp":"必ず","kana":"かならず","romaji":"kanarazu","meaning":"一定","pos":"副詞"},{"jp":"急に","kana":"きゅうに","romaji":"kyuu ni","meaning":"突然","pos":"副詞"},{"jp":"なるほど","kana":"なるほど","romaji":"naruhodo","meaning":"原来如此","pos":"感動詞"},{"jp":"連絡","kana":"れんらく","romaji":"renraku","meaning":"联系","pos":"名詞"},{"jp":"メール","kana":"メール","romaji":"meeru","meaning":"邮件","pos":"名詞"},{"jp":"送ります","kana":"おくります","romaji":"okurimasu","meaning":"发送","pos":"動詞I"},{"jp":"受信します","kana":"じゅしんします","romaji":"jushin shimasu","meaning":"接收","pos":"動詞III"},{"jp":"ただ","kana":"ただ","romaji":"tada","meaning":"只是","pos":"副詞"},{"jp":"遅れます","kana":"おくれます","romaji":"okuremasu","meaning":"迟到；延迟","pos":"動詞II"},{"jp":"誤解","kana":"ごかい","romaji":"gokai","meaning":"误解","pos":"名詞"},{"jp":"放っておきます","kana":"ほうっておきます","romaji":"houtte okimasu","meaning":"放任不管","pos":"動詞I"},{"jp":"翌日","kana":"よくじつ","romaji":"yokujitsu","meaning":"次日","pos":"名詞"},{"jp":"謝罪","kana":"しゃざい","romaji":"shazai","meaning":"道歉","pos":"名詞"},{"jp":"メッセージ","kana":"メッセージ","romaji":"messeeji","meaning":"消息","pos":"名詞"},{"jp":"届きます","kana":"とどきます","romaji":"todokimasu","meaning":"送达","pos":"動詞I"},{"jp":"やっぱり","kana":"やっぱり","romaji":"yappari","meaning":"果然","pos":"副詞"},{"jp":"誠実","kana":"せいじつ","romaji":"seijitsu","meaning":"诚实","pos":"な形容詞"},{"jp":"改めて","kana":"あらためて","romaji":"aratamete","meaning":"重新；再次","pos":"副詞"},{"jp":"解けます","kana":"とけます","romaji":"tokemasu","meaning":"化解；解开","pos":"動詞II"},{"jp":"財布","kana":"さいふ","romaji":"saifu","meaning":"钱包","pos":"名詞"},{"jp":"確かに","kana":"たしかに","romaji":"tashika ni","meaning":"确实","pos":"副詞"},{"jp":"かばん","kana":"かばん","romaji":"kaban","meaning":"包","pos":"名詞"},{"jp":"あちこち","kana":"あちこち","romaji":"achikochi","meaning":"到处","pos":"名詞"},{"jp":"見つかります","kana":"みつかります","romaji":"mitsukarimasu","meaning":"被找到","pos":"動詞I"},{"jp":"落ちます","kana":"おちます","romaji":"ochimasu","meaning":"掉落","pos":"動詞II"},{"jp":"記憶","kana":"きおく","romaji":"kioku","meaning":"记忆","pos":"名詞"},{"jp":"相談します","kana":"そうだんします","romaji":"soudan shimasu","meaning":"商量","pos":"動詞III"},{"jp":"性格","kana":"せいかく","romaji":"seikaku","meaning":"性格","pos":"名詞"},{"jp":"抱えます","kana":"かかえます","romaji":"kakaemasu","meaning":"抱；承担","pos":"動詞II"},{"jp":"誘います","kana":"さそいます","romaji":"sasoimasu","meaning":"邀请","pos":"動詞I"},{"jp":"頼ります","kana":"たよります","romaji":"tayorimasu","meaning":"依靠","pos":"動詞I"}],"grammar":[{"pattern":"〜わけだ","name":"〜わけだ（事理推论）","explain":"表示「（从前文事实）逻辑上得出...的结论」，相当于中文「原来如此/也就是说/难怪」。多用于得知原因后恍然大悟的语境，如「電車が止まっていた。それで遅れたわけだ」（电车停了，所以才迟到）。强调「事实之间的逻辑关系」。","examples":[{"jp":"<ruby>彼<rt>かれ</rt></ruby>はアメリカに<ruby>十年<rt>じゅうねん</rt></ruby>いた。<ruby>道理<rt>どうり</rt></ruby>で<ruby>英語<rt>えいご</rt></ruby>が<ruby>上手<rt>じょうず</rt></ruby>なわけだ。","plain":"かれはアメリカにじゅうねんいた。どうりでえいごがじょうずなわけだ。","cn":"他在美国待了十年。难怪英语好。"}]},{"pattern":"〜わけではない","name":"〜わけではない（部分否定）","explain":"表示「并不是说...」「并非完全...」，是部分否定，常用于澄清误解。前文的看似结论被柔和否定。和「〜ない」直接否定不同，「わけではない」语气委婉。","examples":[{"jp":"<ruby>嫌<rt>きら</rt></ruby>いなわけではないが、あまり<ruby>食<rt>た</rt></ruby>べません。","plain":"きらいなわけではないが、あまりたべません。","cn":"并不是讨厌，只是不太吃。"}]},{"pattern":"〜はずだ","name":"〜はずだ（理应/预期）","explain":"表示说话人基于已知信息推断「应该...」「按理说...」。语感是「我有把握这样」。前接动词原形、形容词、名词+の。注意它是预期，不是事实，所以可能落空。和「わけだ」区别：「はず」是「事前的预测」，「わけ」是「事后的恍然」。","examples":[{"jp":"<ruby>彼<rt>かれ</rt></ruby>は<ruby>三時<rt>さんじ</rt></ruby>に<ruby>来<rt>く</rt></ruby>るはずです。","plain":"かれはさんじにくるはずです。","cn":"他三点应该来。"}]},{"pattern":"〜はずがない","name":"〜はずがない（不可能）","explain":"表示「按理说不可能...」，强烈否定可能性。说话人基于常识或已知信息认为这件事绝不会发生。和「わけがない」语感非常接近，但「はずがない」更强调「与预期相违」，「わけがない」更强调「逻辑上根本不成立」。","examples":[{"jp":"<ruby>彼<rt>かれ</rt></ruby>がそんなことを<ruby>言<rt>い</rt></ruby>うはずがありません。","plain":"かれがそんなことをいうはずがありません。","cn":"他不可能说那种话。"}]},{"pattern":"〜わけがない","name":"〜わけがない（绝对不可能）","explain":"比「はずがない」语气更强，表示「逻辑上根本不可能」。多用于反驳对方观点或强调判断。「彼が泣くわけがない」（他绝不可能哭）比「泣くはずがない」更斩钉截铁。","examples":[{"jp":"こんな<ruby>簡単<rt>かんたん</rt></ruby>な<ruby>問題<rt>もんだい</rt></ruby>が<ruby>分<rt>わ</rt></ruby>からないわけがない。","plain":"こんなかんたんなもんだいがわからないわけがない。","cn":"这么简单的问题不可能不会。"}]}]},"prev":{"id":36,"title":"列挙と対比"},"next":{"id":38,"title":"感情と評価"}}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('lesson-data').textContent);
+  const lesson = data.lesson;
+  const prev = data.prev; // { id, title } | null
+  const next = data.next;
+
+  // Flatten "playable" sentences for the global play-all queue.
+  // group: 'main-N' / 'sub-N' / 'dialogue' (each has its own DOM nodes)
+  const playableGroups = []; // [{ groupId, items: [{ plain, el }] }]
+
+  // ---------- Masthead / nav ----------
+  const lessonNo = String(lesson.id).padStart(2, '0');
+  document.title = lesson.level + ' · 第' + lesson.id + '課 — ' + stripTags(lesson.title.jp);
+  document.getElementById('m-level').textContent = lesson.level + ' — Lesson ' + lessonNo;
+  document.getElementById('m-title-jp').innerHTML = lesson.title.jp;
+  document.getElementById('m-title-en').textContent = lesson.title.romaji + ' · ' + lesson.title.en;
+  document.getElementById('m-lesson-no').textContent = '第 ' + lesson.id + ' 課';
+  document.getElementById('footer-meta').textContent = '日本語 ' + lesson.level + ' · 第' + lesson.id + '課';
+
+  const navEl = document.getElementById('lesson-nav');
+  const navParts = [];
+  navParts.push('<a href="index.html">← 索引</a>');
+  navParts.push('<span>/</span>');
+  if (prev) {
+    navParts.push('<a href="lesson-' + String(prev.id).padStart(2, '0') + '.html">第' + prev.id + '課</a>');
+    navParts.push('<span>/</span>');
+  }
+  navParts.push('<span class="current">第' + lesson.id + '課</span>');
+  if (next) {
+    navParts.push('<span>/</span>');
+    navParts.push('<a href="lesson-' + String(next.id).padStart(2, '0') + '.html">第' + next.id + '課 →</a>');
+  }
+  navEl.innerHTML = navParts.join(' ');
+
+  // ---------- Goals ----------
+  const goalsList = document.getElementById('goals-list');
+  if (lesson.goals && lesson.goals.length) {
+    lesson.goals.forEach(g => {
+      const li = document.createElement('li');
+      li.textContent = g;
+      goalsList.appendChild(li);
+    });
+  } else {
+    document.getElementById('goals-block').hidden = true;
+  }
+
+  // ---------- Articles ----------
+  const articlesEl = document.getElementById('articles');
+  lesson.articles.forEach((article, ai) => {
+    const wrap = document.createElement('article');
+    wrap.className = 'article';
+    const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
+    wrap.id = 'article-' + groupId;
+
+    const meta = document.createElement('div');
+    meta.className = 'article-meta';
+    meta.textContent = article.kind === 'main' ? '主篇 · main reading' : '配篇 · companion reading';
+    wrap.appendChild(meta);
+
+    const h2 = document.createElement('h2');
+    h2.className = 'article-title';
+    h2.innerHTML = article.title.jp + '<span class="ja-small">' + escapeHtml(article.title.cn) + '</span>';
+    wrap.appendChild(h2);
+
+    const items = [];
+    article.sentences.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'sentence';
+      div.dataset.group = groupId;
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="jp-text">' + s.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(s.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(s.cn) + '</div>';
+      wrap.appendChild(div);
+      items.push({ plain: s.plain, el: div });
+    });
+
+    articlesEl.appendChild(wrap);
+    playableGroups.push({ groupId, items });
+  });
+
+  // ---------- Dialogue ----------
+  if (lesson.dialogue && lesson.dialogue.lines && lesson.dialogue.lines.length) {
+    document.getElementById('dialogue-divider').hidden = false;
+    document.getElementById('dialogue-block').hidden = false;
+    const sceneEl = document.getElementById('dialogue-scene');
+    sceneEl.textContent = lesson.dialogue.scene.jp + ' / ' + lesson.dialogue.scene.cn;
+    const linesEl = document.getElementById('dialogue-lines');
+    const items = [];
+    lesson.dialogue.lines.forEach((line, i) => {
+      const div = document.createElement('div');
+      div.className = 'dialogue-line';
+      div.dataset.group = 'dialogue';
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="speaker">' + escapeHtml(line.speaker) + '</div>' +
+        '<div class="jp-text">' + line.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(line.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(line.cn) + '</div>';
+      linesEl.appendChild(div);
+      items.push({ plain: line.plain, el: div });
+    });
+    playableGroups.push({ groupId: 'dialogue', items });
+  }
+
+  // ---------- Questions ----------
+  if (lesson.questions && lesson.questions.length) {
+    document.getElementById('questions-divider').hidden = false;
+    const qBlock = document.getElementById('questions-block');
+    qBlock.hidden = false;
+    lesson.questions.forEach((qa, i) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerHTML =
+        '<div class="question-q">' +
+          '<span class="q-mark">Q' + (i + 1) + '</span>' +
+          '<div class="jp-text">' + qa.q.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.q.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.q.cn) + '</div>' +
+        '</div>' +
+        '<div class="question-a">' +
+          '<span class="q-mark">A</span>' +
+          '<div class="jp-text">' + qa.a.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.a.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.a.cn) + '</div>' +
+          (qa.hint ? '<div class="question-hint">提示：' + escapeHtml(qa.hint) + '</div>' : '') +
+        '</div>';
+      qBlock.appendChild(div);
+    });
+  }
+
+  // ---------- Vocabulary ----------
+  const vocabGrid = document.getElementById('vocab-grid');
+  lesson.vocabulary.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'vocab-item';
+    div.innerHTML =
+      '<div class="vocab-jp">' + escapeHtml(v.jp) + (v.pos ? '<span class="vocab-pos">' + escapeHtml(v.pos) + '</span>' : '') + '</div>' +
+      '<div class="vocab-kana">' + escapeHtml(v.kana) + '</div>' +
+      '<div class="vocab-romaji">' + escapeHtml(v.romaji) + '</div>' +
+      '<div class="vocab-meaning">' + escapeHtml(v.meaning) + '</div>';
+    vocabGrid.appendChild(div);
+  });
+
+  // ---------- Grammar ----------
+  const grammarNotes = document.getElementById('grammar-notes');
+  lesson.grammar.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'grammar-point';
+    let ex = '';
+    if (g.examples && g.examples.length) {
+      ex = '<div class="grammar-examples">' +
+        g.examples.map(e =>
+          '<div class="grammar-example">' +
+            '<div class="ex-jp">' + e.jp + '</div>' +
+            '<div class="ex-cn">' + escapeHtml(e.cn) + '</div>' +
+          '</div>'
+        ).join('') +
+        '</div>';
+    }
+    div.innerHTML =
+      '<div><span class="grammar-pattern">' + escapeHtml(g.pattern) + '</span>' +
+      '<span class="grammar-name">' + escapeHtml(g.name) + '</span></div>' +
+      '<div class="grammar-explain">' + escapeHtml(g.explain) + '</div>' +
+      ex;
+    grammarNotes.appendChild(div);
+  });
+
+  // ---------- Toggles ----------
+  document.querySelectorAll('.toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.toggle;
+      const state = btn.dataset.state;
+      document.querySelectorAll('.toggle[data-toggle="' + type + '"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (state === 'off') document.body.classList.add('hide-' + type);
+      else document.body.classList.remove('hide-' + type);
+    });
+  });
+
+  // ---------- Speech ----------
+  const synth = window.speechSynthesis;
+  let jaVoice = null;
+  const ttsStatus = document.getElementById('tts-status');
+  const nowReading = document.getElementById('now-reading');
+  const speedSelect = document.getElementById('speed-select');
+
+  function pickJapaneseVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    const preferred = voices.find(v => v.lang === 'ja-JP' && /Kyoko|Otoya|O-ren|Google/i.test(v.name));
+    jaVoice = preferred || voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) {
+      ttsStatus.textContent = '音声 · ' + jaVoice.name.split(' ')[0];
+      ttsStatus.classList.remove('unavailable');
+    } else {
+      ttsStatus.textContent = '音声 · 未対応';
+      ttsStatus.classList.add('unavailable');
+    }
+  }
+
+  if (synth) {
+    pickJapaneseVoice();
+    synth.onvoiceschanged = pickJapaneseVoice;
+  } else {
+    ttsStatus.textContent = '音声 · 未対応';
+    ttsStatus.classList.add('unavailable');
+  }
+
+  let queue = [];
+  let isPlaying = false;
+
+  function speak(text, onEnd) {
+    if (!synth) { onEnd && onEnd(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = parseFloat(speedSelect.value);
+    u.pitch = 1.0;
+    u.onend = () => onEnd && onEnd();
+    u.onerror = () => onEnd && onEnd();
+    synth.speak(u);
+  }
+
+  function clearPlaying() {
+    document.querySelectorAll('.sentence.playing, .dialogue-line.playing').forEach(s => s.classList.remove('playing'));
+  }
+
+  function findItem(groupId, index) {
+    const g = playableGroups.find(g => g.groupId === groupId);
+    return g ? g.items[index] : null;
+  }
+
+  function playItem(groupId, index) {
+    if (!synth) return;
+    synth.cancel();
+    clearPlaying();
+    const item = findItem(groupId, index);
+    if (!item) return;
+    item.el.classList.add('playing');
+    nowReading.textContent = item.plain;
+    speak(item.plain, () => {
+      item.el.classList.remove('playing');
+      if (queue.length > 0) {
+        const next = queue.shift();
+        playItem(next.group, next.index);
+      } else {
+        isPlaying = false;
+        nowReading.textContent = '完了 / done';
+      }
+    });
+  }
+
+  document.querySelectorAll('.sentence, .dialogue-line').forEach(el => {
+    el.addEventListener('click', () => {
+      queue = [];
+      isPlaying = true;
+      playItem(el.dataset.group, parseInt(el.dataset.index, 10));
+    });
+  });
+
+  document.getElementById('play-all').addEventListener('click', () => {
+    if (!synth) return;
+    if (isPlaying) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+      nowReading.textContent = '一時停止 / paused';
+      return;
+    }
+    queue = [];
+    playableGroups.forEach(g => {
+      g.items.forEach((_, i) => queue.push({ group: g.groupId, index: i }));
+    });
+    if (queue.length === 0) return;
+    isPlaying = true;
+    const first = queue.shift();
+    playItem(first.group, first.index);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && synth) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+    }
+  });
+
+  // ---------- helpers ----------
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function stripTags(s) { return String(s).replace(/<[^>]*>/g, ''); }
+})();
+</script>
+</body>
+</html>

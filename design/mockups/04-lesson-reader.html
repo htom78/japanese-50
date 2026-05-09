@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Mockup 04 · Lesson Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .frame {
+    width: 1440px; height: 900px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    display: grid;
+    grid-template-columns: 64px 1fr 360px;
+  }
+
+  /* Left thin nav rail */
+  .siderail {
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 28px 0;
+    gap: 22px;
+    background: var(--surface-elev);
+  }
+  .siderail .seal { width: 28px; height: 28px; font-size: 12px; border-radius: 5px; }
+  .siderail .ico {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-3);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .siderail .ico:hover { color: var(--ink); background: var(--bg); }
+  .siderail .ico.active { color: var(--ink); background: var(--bg); }
+  .siderail .ico svg { width: 18px; height: 18px; }
+
+  /* Center reader column */
+  .reader {
+    padding: 36px 56px 64px;
+    overflow: hidden;
+    position: relative;
+  }
+  .reader-head {
+    display: flex; justify-content: space-between; align-items: end;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 22px;
+    margin-bottom: 28px;
+  }
+  .crumb { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase; }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  .crumb .sep { margin: 0 8px; color: var(--ink-5); }
+  .lesson-num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; color: var(--vermillion); margin-bottom: 8px; text-transform: uppercase; }
+  .lesson-title { font-family: var(--font-display-jp); font-weight: 500; font-size: 36px; line-height: 1.15; }
+  .lesson-en { font-family: var(--font-display-en); font-size: 14px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.01em; }
+  .reader-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+    color: var(--ink-2); cursor: pointer;
+  }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  /* Section label */
+  .sec-label {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.22em; color: var(--ink-3);
+    text-transform: uppercase;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .sec-label::before { content: ''; width: 16px; height: 1px; background: var(--ink-3); }
+
+  /* Article body */
+  .article-title {
+    font-family: var(--font-display-jp); font-weight: 500;
+    font-size: 22px; margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: end;
+  }
+  .article-title .small { font-family: var(--font-display-en); font-size: 13px; color: var(--ink-3); font-weight: 400; }
+
+  .sentence-list { display: flex; flex-direction: column; gap: 4px; }
+  .sentence {
+    padding: 16px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    position: relative;
+    margin: 0 -20px;
+  }
+  .sentence:hover { background: var(--surface); }
+  .sentence.playing { background: var(--surface); box-shadow: 0 0 0 1px var(--indigo) inset; }
+  .sentence.playing::before {
+    content: ''; position: absolute; left: 0; top: 18px; bottom: 18px;
+    width: 3px; background: var(--vermillion); border-radius: 2px;
+  }
+  .jp-text {
+    font-family: var(--font-display-jp); font-size: 25px;
+    font-weight: 400; line-height: 2; color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+  .jp-text ruby { ruby-position: over; }
+  .jp-text rt {
+    font-family: var(--font-body-jp); font-weight: 400;
+    font-size: 0.46em; color: var(--ink-3);
+    letter-spacing: 0;
+  }
+  .romaji { font-family: var(--font-display-en); font-style: italic; font-size: 13px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.01em; }
+  .translation { font-family: var(--font-body-jp); font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+
+  /* Audio rail at bottom */
+  .audio-rail {
+    position: absolute; bottom: 24px; left: 56px; right: 56px;
+    background: var(--ink); color: var(--bg);
+    border-radius: 999px;
+    display: flex; align-items: center;
+    padding: 8px 8px 8px 16px;
+    gap: 14px;
+    box-shadow: var(--shadow-lift);
+  }
+  .audio-rail .play {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg); color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .audio-rail .play svg { width: 12px; height: 12px; }
+  .audio-rail-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; }
+  .audio-now-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em; color: rgba(247,244,238,0.5); text-transform: uppercase; }
+  .audio-now-text {
+    font-family: var(--font-display-jp); font-size: 14px;
+    max-width: 340px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .audio-bar {
+    flex: 1; height: 2px; background: rgba(247,244,238,0.15); position: relative;
+  }
+  .audio-bar::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 38%; background: var(--bg); border-radius: 1px;
+  }
+  .audio-actions { display: flex; gap: 4px; }
+  .audio-actions .pill {
+    padding: 5px 12px; border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: rgba(247,244,238,0.7); cursor: pointer;
+  }
+  .audio-actions .pill.on { background: rgba(247,244,238,0.12); color: var(--bg); }
+
+  /* Right rail: layered context */
+  .ctxrail {
+    border-left: 1px solid var(--line);
+    background: var(--surface-elev);
+    padding: 32px 28px;
+    display: flex; flex-direction: column;
+    gap: 24px;
+    overflow: hidden;
+  }
+  .ctx-toggles {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .toggle {
+    text-align: center;
+    padding: 8px;
+    border-radius: 6px;
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--ink-3);
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .toggle.active { background: var(--ink); color: var(--bg); }
+
+  .meta-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .meta-card-title {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.22em;
+    color: var(--ink-3); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .goals { font-family: var(--font-body-jp); font-size: 13px; color: var(--ink-2); line-height: 1.85; }
+  .goals li { margin-left: 14px; padding-left: 4px; position: relative; }
+  .goals li::marker { color: var(--vermillion); }
+
+  .grammar-spots { display: flex; flex-direction: column; gap: 10px; }
+  .spot {
+    padding: 12px 14px;
+    border-left: 2px solid var(--indigo);
+    background: var(--bg);
+    border-radius: 0 8px 8px 0;
+  }
+  .spot-pat { font-family: var(--font-mono); font-size: 12px; color: var(--indigo); }
+  .spot-name { font-family: var(--font-display-jp); font-size: 14px; color: var(--ink); margin-top: 2px; }
+
+  .vocab-quick {
+    display: grid; grid-template-columns: 1fr; gap: 0;
+  }
+  .vq-item {
+    display: grid; grid-template-columns: 80px 1fr;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 12px;
+  }
+  .vq-jp { font-family: var(--font-display-jp); color: var(--ink); font-size: 14px; }
+  .vq-meaning { color: var(--ink-2); font-family: var(--font-body-jp); }
+
+  /* Frame meta */
+  .frame-meta {
+    position: absolute; bottom: 22px; left: 80px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <aside class="siderail">
+    <div class="seal">課</div>
+    <div class="ico active" title="Lessons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h7v16H4z"/><path d="M13 4h7v9h-7z"/><path d="M13 15h7v5h-7z"/></svg></div>
+    <div class="ico" title="Vocab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h12a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2-3-2V6a2 2 0 0 1 2-2z"/></svg></div>
+    <div class="ico" title="Grammar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
+    <div class="ico" title="Progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17l4-4 4 4 8-9"/></svg></div>
+    <div class="ico" style="margin-top:auto" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+  </aside>
+
+  <main class="reader">
+    <header class="reader-head">
+      <div>
+        <div class="crumb"><a>課程</a><span class="sep">/</span><a>N4 · 基礎</a><span class="sep">/</span><span>第 11 課</span></div>
+        <div class="lesson-num" style="margin-top:14px">N4 — Lesson 11 · 進行中</div>
+        <h1 class="lesson-title">て形連結 — 朝のルーティン</h1>
+        <div class="lesson-en">Te-form connection · Morning routine</div>
+      </div>
+      <div class="reader-actions">
+        <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 14V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v9"/><path d="M3 14h18l-2 7H5z"/></svg></div>
+        <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M12 5v14"/></svg></div>
+      </div>
+    </header>
+
+    <section>
+      <div class="sec-label">主篇 · main reading</div>
+      <div class="article-title">朝のルーティン<span class="small">My morning routine</span></div>
+
+      <div class="sentence-list">
+        <div class="sentence playing">
+          <div class="jp-text"><ruby>毎朝<rt>まいあさ</rt></ruby><ruby>六時<rt>ろくじ</rt></ruby>に<ruby>起<rt>お</rt></ruby>きて、まず<ruby>水<rt>みず</rt></ruby>を<ruby>一杯<rt>いっぱい</rt></ruby><ruby>飲<rt>の</rt></ruby>みます。</div>
+          <div class="romaji">maiasa roku-ji ni okite, mazu mizu o ippai nomimasu.</div>
+          <div class="translation">每天早上六点起床,先喝一杯水。</div>
+        </div>
+        <div class="sentence">
+          <div class="jp-text">それから<ruby>顔<rt>かお</rt></ruby>を<ruby>洗<rt>あら</rt></ruby>って、<ruby>歯<rt>は</rt></ruby>を<ruby>磨<rt>みが</rt></ruby>きます。</div>
+          <div class="romaji">sorekara kao o aratte, ha o migakimasu.</div>
+          <div class="translation">然后洗脸、刷牙。</div>
+        </div>
+        <div class="sentence">
+          <div class="jp-text"><ruby>七時<rt>しちじ</rt></ruby>から<ruby>朝<rt>あさ</rt></ruby>ごはんを<ruby>食<rt>た</rt></ruby>べて、ニュースを<ruby>見<rt>み</rt></ruby>ます。</div>
+          <div class="romaji">shichi-ji kara asagohan o tabete, nyuusu o mimasu.</div>
+          <div class="translation">七点开始吃早饭、看新闻。</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="audio-rail">
+      <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="audio-rail-info">
+        <div>
+          <div class="audio-now-label">Now reading · 1 / 9</div>
+          <div class="audio-now-text">まいあさろくじにおきて、まずみずをいっぱいのみます。</div>
+        </div>
+        <div class="audio-bar"></div>
+      </div>
+      <div class="audio-actions">
+        <div class="pill on">0.85×</div>
+        <div class="pill">Loop</div>
+        <div class="pill">↺</div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="ctxrail">
+    <div class="ctx-toggles">
+      <span class="toggle active">FURIGANA</span>
+      <span class="toggle active">ROMAJI</span>
+      <span class="toggle active">中文</span>
+    </div>
+
+    <div class="meta-card">
+      <div class="meta-card-title">学習目標</div>
+      <ul class="goals">
+        <li>能用「〜て、〜」串联两个或以上的动作</li>
+        <li>掌握動詞 I/II/III 类的て形变化规则</li>
+        <li>理解「〜てから」与「〜て、〜」的细微差异</li>
+      </ul>
+    </div>
+
+    <div class="meta-card">
+      <div class="meta-card-title">本課の文法 · 5 points</div>
+      <div class="grammar-spots">
+        <div class="spot">
+          <div class="spot-pat">V て、V</div>
+          <div class="spot-name">动作连接</div>
+        </div>
+        <div class="spot">
+          <div class="spot-pat">V てから</div>
+          <div class="spot-name">先...再...</div>
+        </div>
+        <div class="spot">
+          <div class="spot-pat">V ています</div>
+          <div class="spot-name">进行 / 状态</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meta-card" style="flex:1">
+      <div class="meta-card-title">語彙 · 28 new</div>
+      <div class="vocab-quick">
+        <div class="vq-item"><span class="vq-jp">毎朝</span><span class="vq-meaning">每天早上</span></div>
+        <div class="vq-item"><span class="vq-jp">起きる</span><span class="vq-meaning">起床</span></div>
+        <div class="vq-item"><span class="vq-jp">洗う</span><span class="vq-meaning">洗</span></div>
+        <div class="vq-item"><span class="vq-jp">磨く</span><span class="vq-meaning">擦; 刷</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="frame-meta">— 04 / lesson reader · three-column</div>
+</div>
+</body>
+</html>

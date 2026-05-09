@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Mockup 06 · Footer / About</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .frame {
+    width: 1440px; height: 900px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 80px 64px 36px;
+  }
+
+  /* invert the paper grain on dark */
+  .frame {
+    background-image:
+      radial-gradient(at 92% 12%, rgba(184, 85, 63, 0.10) 0%, transparent 45%),
+      radial-gradient(at 8% 88%, rgba(44, 95, 127, 0.10) 0%, transparent 50%);
+  }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid rgba(247,244,238,0.12);
+    border-bottom: 1px solid rgba(247,244,238,0.12);
+    margin-bottom: 56px;
+  }
+  .stat { padding: 22px 24px; }
+  .stat + .stat { border-left: 1px solid rgba(247,244,238,0.12); }
+  .stat-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.22em; color: rgba(247,244,238,0.5); text-transform: uppercase; margin-bottom: 14px; }
+  .stat-num { font-family: var(--font-display-en); font-size: 42px; font-weight: 500; line-height: 1; letter-spacing: -0.025em; }
+  .stat-num small { font-family: var(--font-display-en); font-size: 18px; color: rgba(247,244,238,0.45); font-weight: 400; }
+  .stat-meta { font-family: var(--font-body-jp); font-size: 12px; color: rgba(247,244,238,0.6); margin-top: 8px; }
+
+  /* Cite section: two columns */
+  .cite-grid {
+    display: grid; grid-template-columns: 1.6fr 1fr 0.9fr 0.9fr;
+    gap: 56px;
+    margin-bottom: 56px;
+  }
+
+  .credo-kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; color: var(--vermillion); text-transform: uppercase; margin-bottom: 18px; }
+  .credo {
+    font-family: var(--font-display-jp); font-weight: 500;
+    font-size: 38px; line-height: 1.25;
+    letter-spacing: -0.005em;
+    color: var(--bg);
+  }
+  .credo .accent { color: var(--vermillion); font-weight: 600; }
+  .credo-en {
+    font-family: var(--font-display-en); font-size: 14px;
+    color: rgba(247,244,238,0.55);
+    margin-top: 18px; line-height: 1.7;
+    max-width: 380px;
+  }
+
+  .col h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; color: rgba(247,244,238,0.5); text-transform: uppercase; margin-bottom: 18px; }
+  .col ul { list-style: none; }
+  .col li { padding: 6px 0; }
+  .col a { color: var(--bg); font-family: var(--font-body-jp); font-size: 14px; text-decoration: none; opacity: 0.85; transition: opacity 200ms, color 200ms; }
+  .col a:hover { color: var(--vermillion); opacity: 1; }
+
+  /* Bottom row */
+  .baseline {
+    border-top: 1px solid rgba(247,244,238,0.12);
+    padding-top: 22px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 11px;
+    color: rgba(247,244,238,0.45);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .baseline .seal { width: 24px; height: 24px; border-radius: 4px; font-size: 11px; }
+  .baseline .left { display: flex; align-items: center; gap: 14px; }
+  .baseline .right { display: flex; gap: 22px; align-items: center; }
+
+  /* Inverted big mark in BG */
+  .ghost-mark {
+    position: absolute;
+    top: 30%; right: -120px;
+    font-family: var(--font-display-jp);
+    font-size: 700px; font-weight: 500;
+    line-height: 0.85;
+    color: rgba(247,244,238,0.04);
+    letter-spacing: -0.04em;
+    pointer-events: none; user-select: none;
+  }
+
+  .frame-meta {
+    position: absolute; bottom: 18px; left: 64px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: rgba(247,244,238,0.35); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="ghost-mark">五十</div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-tag">Lessons</div>
+      <div class="stat-num">50<small>/50</small></div>
+      <div class="stat-meta">N5 ・ N4 ・ N3 ・ N2 完整覆盖</div>
+    </div>
+    <div class="stat">
+      <div class="stat-tag">Vocabulary</div>
+      <div class="stat-num">1.4<small>k</small></div>
+      <div class="stat-meta">毎条带词性、假名、罗马音、释义</div>
+    </div>
+    <div class="stat">
+      <div class="stat-tag">Grammar points</div>
+      <div class="stat-num">237</div>
+      <div class="stat-meta">配 800+ 例句,近义对比讲透</div>
+    </div>
+    <div class="stat">
+      <div class="stat-tag">Audio</div>
+      <div class="stat-num">∞</div>
+      <div class="stat-meta">浏览器原生 TTS · 三档变速</div>
+    </div>
+  </div>
+
+  <div class="cite-grid">
+    <div>
+      <div class="credo-kicker">— Manifest</div>
+      <h2 class="credo">
+        ことばを学ぶことは、<br>
+        もう<span class="accent">一度</span>世界を見ること。
+      </h2>
+      <p class="credo-en">
+        Built as a quiet, private place to study Japanese — no signup, no tracking, no API key. Open the page, press play. The kana will catch up.
+      </p>
+    </div>
+    <div class="col">
+      <h4>Course</h4>
+      <ul>
+        <li><a>N5 入門</a></li>
+        <li><a>N4 基礎</a></li>
+        <li><a>N3 展開</a></li>
+        <li><a>N2 熟達</a></li>
+        <li><a>進度・記録</a></li>
+      </ul>
+    </div>
+    <div class="col">
+      <h4>Reference</h4>
+      <ul>
+        <li><a>語彙索引</a></li>
+        <li><a>文法体系</a></li>
+        <li><a>動詞活用表</a></li>
+        <li><a>敬語ハンドブック</a></li>
+      </ul>
+    </div>
+    <div class="col">
+      <h4>About</h4>
+      <ul>
+        <li><a>Method</a></li>
+        <li><a>Style guide</a></li>
+        <li><a>Source on GitHub ↗</a></li>
+        <li><a>License · MIT</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="baseline">
+    <div class="left">
+      <div class="seal">課</div>
+      <span>NIHONGO 50 KA · v2.0</span>
+    </div>
+    <div class="right">
+      <span>Made for slow learning.</span>
+      <span>Tokyo · 2026</span>
+    </div>
+  </div>
+
+  <div class="frame-meta">— 06 / footer · invert</div>
+</div>
+</body>
+</html>

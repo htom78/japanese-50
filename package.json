@@ -1,0 +1,19 @@
+{
+  "name": "japanese-50",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "tsx generate.ts",
+    "generate:spa": "tsx generate-spa.ts",
+    "screenshots": "node design/screenshot.mjs",
+    "build": "npm run typecheck && npm run generate && npm run generate:spa"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "playwright": "^1.59.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

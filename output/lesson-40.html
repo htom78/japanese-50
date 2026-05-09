@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N2 · 第40課 — 高級接続詞</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #F5F1E8;
+    --bg-elevated: #FAF8F3;
+    --bg-overlay: #FFFEF9;
+    --fg-primary: #2A2620;
+    --fg-secondary: #5C544A;
+    --fg-tertiary: #8C8275;
+    --border-subtle: rgba(42, 38, 32, 0.08);
+    --border-default: rgba(42, 38, 32, 0.14);
+    --accent: #A8895C;
+    --accent-hover: #B89968;
+    --accent-soft: rgba(168, 137, 92, 0.12);
+
+    --serif-jp: "Noto Serif JP", serif;
+    --sans-jp: "Noto Sans JP", sans-serif;
+    --sans-en: "IBM Plex Sans", sans-serif;
+    --mono: "IBM Plex Mono", monospace;
+
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-base);
+    color: var(--fg-primary);
+    font-family: var(--sans-jp);
+    font-size: 14px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(168, 137, 92, 0.04) 0%, transparent 50%),
+      radial-gradient(at 80% 90%, rgba(168, 137, 92, 0.03) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* Header */
+  .masthead {
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .masthead-title {
+    font-family: var(--serif-jp);
+    font-weight: 500;
+  }
+
+  .masthead-title .level {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .masthead-title .title-jp {
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--fg-primary);
+  }
+
+  .masthead-title .title-en {
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .masthead-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* Goals */
+  .goals {
+    background: var(--bg-elevated);
+    border-left: 2px solid var(--accent);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .goals-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .goals ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .goals li {
+    font-size: 12px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+  }
+
+  /* Lesson nav */
+  .lesson-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.05em;
+  }
+
+  .lesson-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms var(--ease);
+  }
+
+  .lesson-nav a:hover { border-bottom-color: var(--accent); }
+
+  .lesson-nav .current { color: var(--fg-secondary); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .control-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .toggle-group {
+    display: inline-flex;
+    border: 1px solid var(--border-default);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .toggle {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    border-right: 1px solid var(--border-default);
+  }
+
+  .toggle:last-child { border-right: none; }
+
+  .toggle:hover { color: var(--fg-primary); }
+
+  .toggle.active {
+    background: var(--accent);
+    color: var(--bg-overlay);
+  }
+
+  .speed-select {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  /* Audio control */
+  .audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    margin-bottom: 40px;
+  }
+
+  .play-btn {
+    background: var(--fg-primary);
+    color: var(--bg-overlay);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 200ms var(--ease);
+    flex-shrink: 0;
+  }
+
+  .play-btn:hover { background: var(--accent); }
+
+  .play-btn svg { width: 14px; height: 14px; }
+
+  .audio-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .audio-info-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: 2px;
+  }
+
+  .audio-info-text {
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Article */
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .article-title {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .article-title .ja-small {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-left: 12px;
+    font-weight: 400;
+    font-family: var(--sans-en);
+    font-style: italic;
+  }
+
+  .article + .article {
+    margin-top: 48px;
+  }
+
+  /* Sentence */
+  .sentence {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 200ms var(--ease);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .sentence:hover { background: var(--accent-soft); }
+  .sentence.playing { background: var(--accent-soft); }
+
+  .sentence.playing::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .jp-text {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    line-height: 2.1;
+    color: var(--fg-primary);
+    letter-spacing: 0.02em;
+  }
+
+  /* Furigana via ruby */
+  ruby { ruby-position: over; }
+
+  rt {
+    font-family: var(--sans-jp);
+    font-size: 0.5em;
+    color: var(--fg-tertiary);
+    font-weight: 400;
+    letter-spacing: 0;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-furigana rt { opacity: 0; }
+
+  .romaji {
+    font-family: var(--sans-en);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    line-height: 1.6;
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-romaji .romaji { display: none; }
+
+  .translation {
+    font-family: var(--sans-jp);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  body.hide-translation .translation { display: none; }
+
+  /* Dialogue */
+  .dialogue-scene {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border-radius: 2px;
+  }
+
+  .dialogue-line { padding: 12px 0 12px 16px; border-bottom: 1px solid var(--border-subtle); border-left: 2px solid transparent; cursor: pointer; transition: all 200ms var(--ease); margin: 0 -16px; padding-right: 16px; }
+  .dialogue-line:hover { background: var(--accent-soft); border-left-color: var(--accent); }
+  .dialogue-line.playing { background: var(--accent-soft); border-left-color: var(--accent); }
+
+  .speaker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* Questions */
+  .question {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .question-q { margin-bottom: 8px; }
+  .question-a { padding-left: 16px; border-left: 2px solid var(--accent-soft); margin-top: 6px; }
+  .q-mark { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .question-hint {
+    font-family: var(--sans-jp);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* Notes section */
+  .section-divider {
+    margin: 64px 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-default);
+  }
+
+  .section-divider-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+
+  .vocab-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+
+  .vocab-item {
+    display: grid;
+    grid-template-columns: minmax(80px, 0.9fr) minmax(100px, 1fr) minmax(60px, 0.5fr) 2fr;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: baseline;
+  }
+
+  .vocab-jp { font-family: var(--serif-jp); font-size: 15px; color: var(--fg-primary); }
+  .vocab-kana { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-secondary); }
+  .vocab-romaji { font-family: var(--sans-en); font-style: italic; font-size: 12px; color: var(--fg-tertiary); }
+  .vocab-meaning { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); }
+  .vocab-pos { font-family: var(--mono); font-size: 9px; color: var(--accent); margin-left: 6px; letter-spacing: 0.05em; }
+
+  .grammar-point { padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .grammar-pattern { font-family: var(--mono); font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 2px; display: inline-block; margin-bottom: 8px; }
+  .grammar-name { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-tertiary); margin-left: 8px; }
+  .grammar-explain { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); line-height: 1.75; margin-bottom: 10px; }
+  .grammar-examples { background: var(--bg-elevated); padding: 10px 14px; border-radius: 2px; font-size: 13px; }
+  .grammar-example { padding: 4px 0; }
+  .grammar-example .ex-jp { font-family: var(--serif-jp); color: var(--fg-primary); }
+  .grammar-example .ex-cn { font-size: 11px; color: var(--fg-tertiary); margin-top: 2px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-default);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .tts-status { font-family: var(--mono); font-size: 10px; color: var(--fg-tertiary); letter-spacing: 0.05em; }
+  .tts-status.unavailable { color: #8B4513; }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 20px 64px; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead-meta { text-align: left; }
+    .jp-text { font-size: 17px; }
+    .vocab-item { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+    .controls { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <nav class="lesson-nav" id="lesson-nav"></nav>
+
+    <header class="masthead">
+      <div class="masthead-title">
+        <span class="level" id="m-level"></span>
+        <h1 class="title-jp" id="m-title-jp"></h1>
+        <div class="title-en" id="m-title-en"></div>
+      </div>
+      <div class="masthead-meta">
+        <div id="m-lesson-no"></div>
+        <div id="tts-status" class="tts-status">音声 · loading…</div>
+      </div>
+    </header>
+
+    <div class="goals" id="goals-block">
+      <div class="goals-label">学習目標 · goals</div>
+      <ul id="goals-list"></ul>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">Furigana</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="furigana" data-state="on">On</button>
+          <button class="toggle" data-toggle="furigana" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Romaji</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="romaji" data-state="on">On</button>
+          <button class="toggle" data-toggle="romaji" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">中文</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="translation" data-state="on">On</button>
+          <button class="toggle" data-toggle="translation" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Speed</span>
+        <select class="speed-select" id="speed-select">
+          <option value="0.7">0.7×</option>
+          <option value="0.85" selected>0.85×</option>
+          <option value="1.0">1.0×</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="audio-bar">
+      <button class="play-btn" id="play-all" aria-label="播放全文">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="audio-info">
+        <div class="audio-info-label">Now reading</div>
+        <div class="audio-info-text" id="now-reading">クリックで再生 / Click sentence to play</div>
+      </div>
+    </div>
+
+    <div id="articles"></div>
+
+    <div class="section-divider" id="dialogue-divider" hidden>
+      <span class="section-divider-text">対話 · dialogue</span>
+    </div>
+    <section id="dialogue-block" hidden>
+      <div class="dialogue-scene" id="dialogue-scene"></div>
+      <div id="dialogue-lines"></div>
+    </section>
+
+    <div class="section-divider" id="questions-divider" hidden>
+      <span class="section-divider-text">理解問題 · comprehension</span>
+    </div>
+    <section id="questions-block" hidden></section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">語彙 · vocabulary</span>
+    </div>
+    <section class="notes">
+      <div class="vocab-grid" id="vocab-grid"></div>
+    </section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">文法 · grammar</span>
+    </div>
+    <section class="notes" id="grammar-notes"></section>
+
+    <footer class="footer">
+      <span id="footer-meta"></span>
+      <span>web speech api</span>
+    </footer>
+
+  </div>
+
+<script id="lesson-data" type="application/json">{"lesson":{"id":40,"level":"N2","title":{"jp":"高級接続詞","romaji":"koukyuu setsuzokushi","cn":"高级接续词","en":"Advanced Connectives"},"goals":["掌握论说文常用的接续词及其语气差异","区分「ところが」与「しかし」的转折强度","能用「ただし」「なお」补充例外或追加说明"],"articles":[{"kind":"main","title":{"jp":"論文の書き方","romaji":"ronbun no kakikata","cn":"论文写作方法"},"sentences":[{"jp":"<ruby>論文<rt>ろんぶん</rt></ruby>を<ruby>書<rt>か</rt></ruby>く<ruby>際<rt>さい</rt></ruby>、<ruby>最<rt>もっと</rt></ruby>も<ruby>重要<rt>じゅうよう</rt></ruby>なのは<ruby>論理<rt>ろんり</rt></ruby>の<ruby>流<rt>なが</rt></ruby>れである。","plain":"ろんぶんをかくさい、もっともじゅうようなのはろんりのながれである。","romaji":"ronbun o kaku sai, mottomo juuyou na no wa ronri no nagare de aru.","cn":"写论文时,最重要的是论理的流畅。"},{"jp":"<ruby>主張<rt>しゅちょう</rt></ruby>を<ruby>明確<rt>めいかく</rt></ruby>に<ruby>示<rt>しめ</rt></ruby>し、それを<ruby>裏付<rt>うらづ</rt></ruby>ける<ruby>根拠<rt>こんきょ</rt></ruby>を<ruby>順序<rt>じゅんじょ</rt></ruby>よく<ruby>並<rt>なら</rt></ruby>べなければならない。","plain":"しゅちょうをめいかくにしめし、それをうらづけるこんきょをじゅんじょよくならべなければならない。","romaji":"shuchou o meikaku ni shimeshi, sore o urazukeru konkyo o junjo yoku narabenakereba naranai.","cn":"必须明确地展示主张,并按顺序排列支撑它的根据。"},{"jp":"そのために、<ruby>適切<rt>てきせつ</rt></ruby>な<ruby>接続詞<rt>せつぞくし</rt></ruby>の<ruby>使用<rt>しよう</rt></ruby>が<ruby>欠<rt>か</rt></ruby>かせない。","plain":"そのために、てきせつなせつぞくしのしようがかかせない。","romaji":"sono tame ni, tekisetsu na setsuzokushi no shiyou ga kakasenai.","cn":"为此,恰当地使用接续词不可或缺。"},{"jp":"たとえば「したがって」は<ruby>前述<rt>ぜんじゅつ</rt></ruby>の<ruby>内容<rt>ないよう</rt></ruby>から<ruby>論理的<rt>ろんりてき</rt></ruby>な<ruby>結論<rt>けつろん</rt></ruby>を<ruby>導<rt>みちび</rt></ruby>く<ruby>際<rt>さい</rt></ruby>に<ruby>用<rt>もち</rt></ruby>いる。","plain":"たとえば「したがって」はぜんじゅつのないようからろんりてきなけつろんをみちびくさいにもちいる。","romaji":"tatoeba \"shitagatte\" wa zenjutsu no naiyou kara ronri-teki na ketsuron o michibiku sai ni mochiiru.","cn":"例如「したがって」用于从前述内容导出逻辑结论。"},{"jp":"これは「だから」より<ruby>硬<rt>かた</rt></ruby>く、<ruby>学術的<rt>がくじゅつてき</rt></ruby>な<ruby>文章<rt>ぶんしょう</rt></ruby>に<ruby>適<rt>てき</rt></ruby>している。","plain":"これは「だから」よりかたく、がくじゅつてきなぶんしょうにてきしている。","romaji":"kore wa \"dakara\" yori kataku, gakujutsu-teki na bunshou ni tekishite iru.","cn":"它比「だから」更硬,适合学术文章。"},{"jp":"ところが、<ruby>予想<rt>よそう</rt></ruby>と<ruby>異<rt>こと</rt></ruby>なる<ruby>結果<rt>けっか</rt></ruby>が<ruby>得<rt>え</rt></ruby>られた<ruby>場合<rt>ばあい</rt></ruby>には、「ところが」を<ruby>用<rt>もち</rt></ruby>いて<ruby>強<rt>つよ</rt></ruby>い<ruby>転換<rt>てんかん</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>す。","plain":"ところが、よそうとことなるけっかがえられたばあいには、「ところが」をもちいてつよいてんかんをあらわす。","romaji":"tokoro ga, yosou to kotonaru kekka ga erareta baai ni wa, \"tokoro ga\" o mochiite tsuyoi tenkan o arawasu.","cn":"然而,在得到与预想不同的结果时,用「ところが」表达强烈的转折。"},{"jp":"これは<ruby>単<rt>たん</rt></ruby>なる<ruby>反対意見<rt>はんたいいけん</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>す「しかし」とは<ruby>異<rt>こと</rt></ruby>なる。","plain":"これはたんなるはんたいいけんをしめす「しかし」とはことなる。","romaji":"kore wa tan naru hantai-iken o shimesu \"shikashi\" to wa kotonaru.","cn":"这与单纯表达反对意见的「しかし」不同。"},{"jp":"さらに、<ruby>議論<rt>ぎろん</rt></ruby>を<ruby>深<rt>ふか</rt></ruby>める<ruby>際<rt>さい</rt></ruby>には「さらに」「それゆえ」などを<ruby>用<rt>もち</rt></ruby>い、<ruby>論<rt>ろん</rt></ruby>を<ruby>段階的<rt>だんかいてき</rt></ruby>に<ruby>展開<rt>てんかい</rt></ruby>する。","plain":"さらに、ぎろんをふかめるさいには「さらに」「それゆえ」などをもちい、ろんをだんかいてきにてんかいする。","romaji":"sara ni, giron o fukameru sai ni wa \"sara ni\" \"sore yue\" nado o mochii, ron o dankai-teki ni tenkai suru.","cn":"此外,在深化论证时,使用「さらに」「それゆえ」等,使论证阶梯式展开。"},{"jp":"ただし、<ruby>例外<rt>れいがい</rt></ruby>や<ruby>条件<rt>じょうけん</rt></ruby>を<ruby>付<rt>つ</rt></ruby>け<ruby>加<rt>くわ</rt></ruby>える<ruby>場合<rt>ばあい</rt></ruby>には「ただし」を<ruby>用<rt>もち</rt></ruby>いる。","plain":"ただし、れいがいやじょうけんをつけくわえるばあいには「ただし」をもちいる。","romaji":"tadashi, reigai ya jouken o tsukekuwaeru baai ni wa \"tadashi\" o mochiiru.","cn":"但是,在添加例外或条件时使用「ただし」。"},{"jp":"なお、<ruby>本文<rt>ほんぶん</rt></ruby>に<ruby>関連<rt>かんれん</rt></ruby>する<ruby>補足<rt>ほそく</rt></ruby><ruby>情報<rt>じょうほう</rt></ruby>を<ruby>加<rt>くわ</rt></ruby>えるときは「なお」を<ruby>使<rt>つか</rt></ruby>うとよい。","plain":"なお、ほんぶんにかんれんするほそくじょうほうをくわえるときは「なお」をつかうとよい。","romaji":"nao, honbun ni kanren suru hosoku-jouhou o kuwaeru toki wa \"nao\" o tsukau to yoi.","cn":"另外,补充与正文相关的信息时,使用「なお」较好。"},{"jp":"<ruby>一方<rt>いっぽう</rt></ruby>、<ruby>対比<rt>たいひ</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>す<ruby>際<rt>さい</rt></ruby>には「一方」が<ruby>有効<rt>ゆうこう</rt></ruby>である。","plain":"いっぽう、たいひをしめすさいには「いっぽう」がゆうこうである。","romaji":"ippou, taihi o shimesu sai ni wa \"ippou\" ga yuukou de aru.","cn":"另一方面,在表示对比时,「一方」是有效的。"},{"jp":"これらの<ruby>接続詞<rt>せつぞくし</rt></ruby>を<ruby>使<rt>つか</rt></ruby>い<ruby>分<rt>わ</rt></ruby>けることで、<ruby>論文<rt>ろんぶん</rt></ruby>の<ruby>構造<rt>こうぞう</rt></ruby>は<ruby>明瞭<rt>めいりょう</rt></ruby>になる。","plain":"これらのせつぞくしをつかいわけることで、ろんぶんのこうぞうはめいりょうになる。","romaji":"korera no setsuzokushi o tsukaiwakeru koto de, ronbun no kouzou wa meiryou ni naru.","cn":"通过区别使用这些接续词,论文的结构就会清晰。"},{"jp":"<ruby>言葉<rt>ことば</rt></ruby>の<ruby>選択<rt>せんたく</rt></ruby>は、すなわち<ruby>論理<rt>ろんり</rt></ruby>の<ruby>選択<rt>せんたく</rt></ruby>なのである。","plain":"ことばのせんたくは、すなわちろんりのせんたくなのである。","romaji":"kotoba no sentaku wa, sunawachi ronri no sentaku na no de aru.","cn":"词语的选择,即是逻辑的选择。"}]},{"kind":"companion","title":{"jp":"契約書の一節","romaji":"keiyakusho no issetsu","cn":"合同条款节选"},"sentences":[{"jp":"<ruby>本契約<rt>ほんけいやく</rt></ruby>は、<ruby>甲<rt>こう</rt></ruby>と<ruby>乙<rt>おつ</rt></ruby>の<ruby>双方<rt>そうほう</rt></ruby>の<ruby>合意<rt>ごうい</rt></ruby>に<ruby>基<rt>もと</rt></ruby>づき<ruby>締結<rt>ていけつ</rt></ruby>される。","plain":"ほんけいやくは、こうとおつのそうほうのごういにもとづきていけつされる。","romaji":"hon-keiyaku wa, kou to otsu no souhou no goui ni motozuki teiketsu sareru.","cn":"本合同基于甲乙双方的合意而签订。"},{"jp":"<ruby>契約期間<rt>けいやくきかん</rt></ruby>は<ruby>一年<rt>いちねん</rt></ruby>とする。","plain":"けいやくきかんはいちねんとする。","romaji":"keiyaku-kikan wa ichinen to suru.","cn":"合同期限为一年。"},{"jp":"ただし、<ruby>双方<rt>そうほう</rt></ruby>の<ruby>合意<rt>ごうい</rt></ruby>があれば<ruby>更新<rt>こうしん</rt></ruby>することができる。","plain":"ただし、そうほうのごういがあればこうしんすることができる。","romaji":"tadashi, souhou no goui ga areba koushin suru koto ga dekiru.","cn":"但是,经双方合意可以续签。"},{"jp":"<ruby>甲<rt>こう</rt></ruby>は<ruby>毎月末<rt>まいげつまつ</rt></ruby>までに<ruby>所定<rt>しょてい</rt></ruby>の<ruby>金額<rt>きんがく</rt></ruby>を<ruby>支払<rt>しはら</rt></ruby>う<ruby>義務<rt>ぎむ</rt></ruby>を<ruby>負<rt>お</rt></ruby>う。","plain":"こうはまいげつまつまでにしょていのきんがくをしはらうぎむをおう。","romaji":"kou wa maigetsumatsu made ni shotei no kingaku o shiharau gimu o ou.","cn":"甲方负有于每月末前支付规定金额的义务。"},{"jp":"なお、<ruby>支払<rt>しはら</rt></ruby>いが<ruby>遅延<rt>ちえん</rt></ruby>した<ruby>場合<rt>ばあい</rt></ruby>は<ruby>遅延<rt>ちえん</rt></ruby><ruby>利息<rt>りそく</rt></ruby>を<ruby>加<rt>くわ</rt></ruby>えて<ruby>請求<rt>せいきゅう</rt></ruby>するものとする。","plain":"なお、しはらいがちえんしたばあいはちえんりそくをくわえてせいきゅうするものとする。","romaji":"nao, shiharai ga chien shita baai wa chien-risoku o kuwaete seikyuu suru mono to suru.","cn":"另外,如发生支付逾期,将加收滞纳利息。"},{"jp":"<ruby>乙<rt>おつ</rt></ruby>は<ruby>業務<rt>ぎょうむ</rt></ruby>を<ruby>誠実<rt>せいじつ</rt></ruby>に<ruby>遂行<rt>すいこう</rt></ruby>しなければならない。","plain":"おつはぎょうむをせいじつにすいこうしなければならない。","romaji":"otsu wa gyoumu o seijitsu ni suikou shinakereba naranai.","cn":"乙方必须诚实地履行业务。"},{"jp":"したがって、<ruby>怠慢<rt>たいまん</rt></ruby>が<ruby>認<rt>みと</rt></ruby>められた<ruby>場合<rt>ばあい</rt></ruby>、<ruby>甲<rt>こう</rt></ruby>は<ruby>契約<rt>けいやく</rt></ruby>を<ruby>解除<rt>かいじょ</rt></ruby>することができる。","plain":"したがって、たいまんがみとめられたばあい、こうはけいやくをかいじょすることができる。","romaji":"shitagatte, taiman ga mitomerareta baai, kou wa keiyaku o kaijo suru koto ga dekiru.","cn":"因此,如认定有怠慢行为,甲方可以解除合同。"},{"jp":"<ruby>本契約<rt>ほんけいやく</rt></ruby>に<ruby>記載<rt>きさい</rt></ruby>のない<ruby>事項<rt>じこう</rt></ruby>については、<ruby>双方<rt>そうほう</rt></ruby>の<ruby>協議<rt>きょうぎ</rt></ruby>により<ruby>定<rt>さだ</rt></ruby>めるものとする。","plain":"ほんけいやくにきさいのないじこうについては、そうほうのきょうぎによりさだめるものとする。","romaji":"hon-keiyaku ni kisai no nai jikou ni tsuite wa, souhou no kyougi ni yori sadameru mono to suru.","cn":"本合同未记载的事项,由双方协商确定。"},{"jp":"さらに、<ruby>不可抗力<rt>ふかこうりょく</rt></ruby>による<ruby>履行不能<rt>りこうふのう</rt></ruby>の<ruby>場合<rt>ばあい</rt></ruby>、<ruby>双方<rt>そうほう</rt></ruby>は<ruby>責任<rt>せきにん</rt></ruby>を<ruby>負<rt>お</rt></ruby>わない。","plain":"さらに、ふかこうりょくによるりこうふのうのばあい、そうほうはせきにんをおわない。","romaji":"sara ni, fukakouryoku ni yoru rikou-funou no baai, souhou wa sekinin o owanai.","cn":"此外,因不可抗力导致无法履行时,双方不承担责任。"},{"jp":"<ruby>以上<rt>いじょう</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>のうえ、<ruby>署名<rt>しょめい</rt></ruby>するものとする。","plain":"いじょうをかくにんのうえ、しょめいするものとする。","romaji":"ijou o kakunin no ue, shomei suru mono to suru.","cn":"确认以上内容后签字。"}]}],"dialogue":{"scene":{"jp":"大学の研究室。指導教授が学生の論文草稿を見ている。","cn":"大学研究室。指导教授正在看学生的论文草稿。"},"lines":[{"speaker":"教授","jp":"この<ruby>段落<rt>だんらく</rt></ruby>、<ruby>接続詞<rt>せつぞくし</rt></ruby>の<ruby>使<rt>つか</rt></ruby>い<ruby>方<rt>かた</rt></ruby>がちょっと<ruby>気<rt>き</rt></ruby>になりますね。","plain":"このだんらく、せつぞくしのつかいかたがちょっときになりますね。","romaji":"kono danraku, setsuzokushi no tsukaikata ga chotto ki ni narimasu ne.","cn":"这段的接续词用法,我有点在意。"},{"speaker":"学生","jp":"はい、「しかし」を<ruby>使<rt>つか</rt></ruby>ったところですね。","plain":"はい、「しかし」をつかったところですね。","romaji":"hai, \"shikashi\" o tsukatta tokoro desu ne.","cn":"是的,我在这里用了「しかし」。"},{"speaker":"教授","jp":"ここは<ruby>予想<rt>よそう</rt></ruby>と<ruby>異<rt>こと</rt></ruby>なる<ruby>結果<rt>けっか</rt></ruby>が<ruby>出<rt>で</rt></ruby>ているので、「ところが」のほうが<ruby>適切<rt>てきせつ</rt></ruby>でしょう。","plain":"ここはよそうとことなるけっかがでているので、「ところが」のほうがてきせつでしょう。","romaji":"koko wa yosou to kotonaru kekka ga dete iru node, \"tokoro ga\" no hou ga tekisetsu deshou.","cn":"这里出现了与预想不同的结果,用「ところが」更恰当。"},{"speaker":"学生","jp":"なるほど。「しかし」は<ruby>意外性<rt>いがいせい</rt></ruby>が<ruby>弱<rt>よわ</rt></ruby>いんですね。","plain":"なるほど。「しかし」はいがいせいがよわいんですね。","romaji":"naruhodo. \"shikashi\" wa igaisei ga yowai n desu ne.","cn":"原来如此。「しかし」的意外性较弱啊。"},{"speaker":"教授","jp":"そうです。それから、<ruby>結論<rt>けつろん</rt></ruby>には「したがって」を<ruby>使<rt>つか</rt></ruby>って<ruby>論理<rt>ろんり</rt></ruby>を<ruby>明確<rt>めいかく</rt></ruby>にしてください。","plain":"そうです。それから、けつろんには「したがって」をつかってろんりをめいかくにしてください。","romaji":"sou desu. sore kara, ketsuron ni wa \"shitagatte\" o tsukatte ronri o meikaku ni shite kudasai.","cn":"是的。还有,结论部分请用「したがって」让逻辑明确。"},{"speaker":"学生","jp":"わかりました。<ruby>修正<rt>しゅうせい</rt></ruby>してまた<ruby>提出<rt>ていしゅつ</rt></ruby>します。","plain":"わかりました。しゅうせいしてまたていしゅつします。","romaji":"wakarimashita. shuusei shite mata teishutsu shimasu.","cn":"明白了。我修改后再提交。"}]},"questions":[{"q":{"jp":"<ruby>論文<rt>ろんぶん</rt></ruby>を<ruby>書<rt>か</rt></ruby>く<ruby>際<rt>さい</rt></ruby>、<ruby>最<rt>もっと</rt></ruby>も<ruby>重要<rt>じゅうよう</rt></ruby>なのは<ruby>何<rt>なに</rt></ruby>か。","plain":"ろんぶんをかくさい、もっともじゅうようなのはなにか。","romaji":"ronbun o kaku sai, mottomo juuyou na no wa nani ka.","cn":"写论文时,最重要的是什么?"},"a":{"jp":"<ruby>論理<rt>ろんり</rt></ruby>の<ruby>流<rt>なが</rt></ruby>れである。","plain":"ろんりのながれである。","romaji":"ronri no nagare de aru.","cn":"论理的流畅。"}},{"q":{"jp":"「ところが」と「しかし」の<ruby>違<rt>ちが</rt></ruby>いは<ruby>何<rt>なに</rt></ruby>か。","plain":"「ところが」と「しかし」のちがいはなにか。","romaji":"\"tokoro ga\" to \"shikashi\" no chigai wa nani ka.","cn":"「ところが」与「しかし」的区别是什么?"},"a":{"jp":"「ところが」は<ruby>強<rt>つよ</rt></ruby>い<ruby>転換<rt>てんかん</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>し、「しかし」は<ruby>単<rt>たん</rt></ruby>なる<ruby>反対意見<rt>はんたいいけん</rt></ruby>を<ruby>示<rt>しめ</rt></ruby>す。","plain":"「ところが」はつよいてんかんをあらわし、「しかし」はたんなるはんたいいけんをしめす。","romaji":"\"tokoro ga\" wa tsuyoi tenkan o arawashi, \"shikashi\" wa tan naru hantai-iken o shimesu.","cn":"「ところが」表达强烈的转折,「しかし」表示单纯的反对意见。"},"hint":"注意意外性的强弱差别。"},{"q":{"jp":"<ruby>例外<rt>れいがい</rt></ruby>や<ruby>条件<rt>じょうけん</rt></ruby>を<ruby>付<rt>つ</rt></ruby>け<ruby>加<rt>くわ</rt></ruby>えるとき、どの<ruby>接続詞<rt>せつぞくし</rt></ruby>を<ruby>用<rt>もち</rt></ruby>いるか。","plain":"れいがいやじょうけんをつけくわえるとき、どのせつぞくしをもちいるか。","romaji":"reigai ya jouken o tsukekuwaeru toki, dono setsuzokushi o mochiiru ka.","cn":"附加例外或条件时,使用哪个接续词?"},"a":{"jp":"「ただし」を<ruby>用<rt>もち</rt></ruby>いる。","plain":"「ただし」をもちいる。","romaji":"\"tadashi\" o mochiiru.","cn":"使用「ただし」。"}},{"q":{"jp":"<ruby>教授<rt>きょうじゅ</rt></ruby>は<ruby>学生<rt>がくせい</rt></ruby>に<ruby>結論<rt>けつろん</rt></ruby><ruby>部分<rt>ぶぶん</rt></ruby>でどの<ruby>接続詞<rt>せつぞくし</rt></ruby>を<ruby>使<rt>つか</rt></ruby>うようにと<ruby>言<rt>い</rt></ruby>ったか。","plain":"きょうじゅはがくせいにけつろんぶぶんでどのせつぞくしをつかうようにといったか。","romaji":"kyouju wa gakusei ni ketsuron-bubun de dono setsuzokushi o tsukau you ni to itta ka.","cn":"教授让学生在结论部分使用什么接续词?"},"a":{"jp":"「したがって」を<ruby>使<rt>つか</rt></ruby>うようにと<ruby>言<rt>い</rt></ruby>った。","plain":"「したがって」をつかうようにといった。","romaji":"\"shitagatte\" o tsukau you ni to itta.","cn":"让他使用「したがって」。"}}],"vocabulary":[{"jp":"論文","kana":"ろんぶん","romaji":"ronbun","meaning":"论文","pos":"名詞"},{"jp":"論理","kana":"ろんり","romaji":"ronri","meaning":"逻辑","pos":"名詞"},{"jp":"流れ","kana":"ながれ","romaji":"nagare","meaning":"流向,流畅","pos":"名詞"},{"jp":"主張","kana":"しゅちょう","romaji":"shuchou","meaning":"主张","pos":"名詞"},{"jp":"明確","kana":"めいかく","romaji":"meikaku","meaning":"明确","pos":"な形容詞"},{"jp":"裏付ける","kana":"うらづける","romaji":"urazukeru","meaning":"佐证,支撑","pos":"動詞II"},{"jp":"根拠","kana":"こんきょ","romaji":"konkyo","meaning":"根据","pos":"名詞"},{"jp":"順序","kana":"じゅんじょ","romaji":"junjo","meaning":"顺序","pos":"名詞"},{"jp":"適切","kana":"てきせつ","romaji":"tekisetsu","meaning":"恰当","pos":"な形容詞"},{"jp":"接続詞","kana":"せつぞくし","romaji":"setsuzokushi","meaning":"接续词","pos":"名詞"},{"jp":"欠かせない","kana":"かかせない","romaji":"kakasenai","meaning":"不可缺少","pos":"い形容詞"},{"jp":"したがって","kana":"したがって","romaji":"shitagatte","meaning":"因此","pos":"接続詞"},{"jp":"前述","kana":"ぜんじゅつ","romaji":"zenjutsu","meaning":"前述","pos":"名詞"},{"jp":"導く","kana":"みちびく","romaji":"michibiku","meaning":"导出,引导","pos":"動詞I"},{"jp":"学術的","kana":"がくじゅつてき","romaji":"gakujutsu-teki","meaning":"学术的","pos":"な形容詞"},{"jp":"ところが","kana":"ところが","romaji":"tokoroga","meaning":"然而(强转折)","pos":"接続詞"},{"jp":"転換","kana":"てんかん","romaji":"tenkan","meaning":"转换","pos":"名詞"},{"jp":"異なる","kana":"ことなる","romaji":"kotonaru","meaning":"不同","pos":"動詞I"},{"jp":"さらに","kana":"さらに","romaji":"sara ni","meaning":"进一步","pos":"接続詞"},{"jp":"それゆえ","kana":"それゆえ","romaji":"sore yue","meaning":"因此(文言)","pos":"接続詞"},{"jp":"段階的","kana":"だんかいてき","romaji":"dankai-teki","meaning":"阶段性","pos":"な形容詞"},{"jp":"展開","kana":"てんかい","romaji":"tenkai","meaning":"展开","pos":"名詞"},{"jp":"ただし","kana":"ただし","romaji":"tadashi","meaning":"但是,但书","pos":"接続詞"},{"jp":"例外","kana":"れいがい","romaji":"reigai","meaning":"例外","pos":"名詞"},{"jp":"条件","kana":"じょうけん","romaji":"jouken","meaning":"条件","pos":"名詞"},{"jp":"なお","kana":"なお","romaji":"nao","meaning":"另外,补充","pos":"接続詞"},{"jp":"補足","kana":"ほそく","romaji":"hosoku","meaning":"补充","pos":"名詞"},{"jp":"一方","kana":"いっぽう","romaji":"ippou","meaning":"另一方面","pos":"接続詞"},{"jp":"対比","kana":"たいひ","romaji":"taihi","meaning":"对比","pos":"名詞"},{"jp":"構造","kana":"こうぞう","romaji":"kouzou","meaning":"结构","pos":"名詞"},{"jp":"明瞭","kana":"めいりょう","romaji":"meiryou","meaning":"清晰","pos":"な形容詞"},{"jp":"すなわち","kana":"すなわち","romaji":"sunawachi","meaning":"即,也就是","pos":"接続詞"},{"jp":"契約","kana":"けいやく","romaji":"keiyaku","meaning":"合同","pos":"名詞"},{"jp":"締結","kana":"ていけつ","romaji":"teiketsu","meaning":"签订","pos":"名詞"},{"jp":"更新","kana":"こうしん","romaji":"koushin","meaning":"更新,续签","pos":"名詞"},{"jp":"遂行","kana":"すいこう","romaji":"suikou","meaning":"履行","pos":"名詞"},{"jp":"不可抗力","kana":"ふかこうりょく","romaji":"fukakouryoku","meaning":"不可抗力","pos":"名詞"}],"grammar":[{"pattern":"したがって / それゆえ","name":"逻辑结论","explain":"\"因此,所以\"。「したがって」是书面常用,从前述事实导出逻辑结论。「それゆえ」更文言,语气更硬,常出现在哲学、法律等正式文体中。两者均比口语「だから」「それで」正式。结论的因果链条要清晰,不可滥用以避免论证空洞。","examples":[{"jp":"<ruby>需要<rt>じゅよう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>えた。したがって、<ruby>価格<rt>かかく</rt></ruby>も<ruby>上昇<rt>じょうしょう</rt></ruby>した。","plain":"じゅようがふえた。したがって、かかくもじょうしょうした。","cn":"需求增加了。因此,价格也上涨了。"},{"jp":"<ruby>人間<rt>にんげん</rt></ruby>は<ruby>考<rt>かんが</rt></ruby>える。それゆえに<ruby>存在<rt>そんざい</rt></ruby>する。","plain":"にんげんはかんがえる。それゆえにそんざいする。","cn":"人在思考,因此存在。"}]},{"pattern":"ところが","name":"强转折(意外)","explain":"\"然而,没想到\"。表达与预期截然相反、出人意料的结果。比「しかし」语气更强,带\"出乎意料\"色彩。「しかし」是中性反对、对立关系,「ところが」侧重\"事态意外发生转变\"。多用于叙述实验结果、事件发展等场景,常用过去时配合。","examples":[{"jp":"<ruby>順調<rt>じゅんちょう</rt></ruby>に<ruby>進<rt>すす</rt></ruby>むはずだった。ところが、<ruby>大<rt>おお</rt></ruby>きな<ruby>問題<rt>もんだい</rt></ruby>が<ruby>発生<rt>はっせい</rt></ruby>した。","plain":"じゅんちょうにすすむはずだった。ところが、おおきなもんだいがはっせいした。","cn":"本应顺利推进。然而,出现了大问题。"}]},{"pattern":"ただし","name":"例外条件","explain":"\"但是,但书\"。专用于补充例外或附加条件,语气是\"承认前面的话,但加一条限定\"。与「しかし」「だが」(转折反对)不同,「ただし」不否定前文,只缩小适用范围。常见于法条、规定、说明书的\"但书\"。","examples":[{"jp":"<ruby>入場<rt>にゅうじょう</rt></ruby>は<ruby>無料<rt>むりょう</rt></ruby>。ただし、<ruby>事前<rt>じぜん</rt></ruby><ruby>予約<rt>よやく</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>である。","plain":"にゅうじょうはむりょう。ただし、じぜんよやくがひつようである。","cn":"入场免费。但是,需要事先预约。"}]},{"pattern":"なお / さらに","name":"补充・追加","explain":"「なお」用于补充与正文相关的附加信息,常见于通知、说明,语气客观;「さらに」表示在已有内容基础上\"再进一步\",可叠加论据或深化论证。「なお」的内容可有可无,「さらに」的内容是论证递进的关键。","examples":[{"jp":"<ruby>会議<rt>かいぎ</rt></ruby>は<ruby>三時<rt>さんじ</rt></ruby>から。なお、<ruby>資料<rt>しりょう</rt></ruby>は<ruby>事前<rt>じぜん</rt></ruby>に<ruby>配布<rt>はいふ</rt></ruby>する。","plain":"かいぎはさんじから。なお、しりょうはじぜんにはいふする。","cn":"会议从三点开始。另外,资料事先发放。"},{"jp":"コストが<ruby>高<rt>たか</rt></ruby>い。さらに、<ruby>納期<rt>のうき</rt></ruby>も<ruby>遅<rt>おそ</rt></ruby>い。","plain":"コストがたかい。さらに、のうきもおそい。","cn":"成本高。而且,交期也晚。"}]},{"pattern":"一方(で)","name":"对比并列","explain":"\"另一方面\"。引出与前文形成对比的另一面,常用于陈述两种现象、两种立场。「〜一方で」可接句中,「一方」可作独立接续词起句。比「しかし」更平和、客观,适合论说文呈现\"双面性\"。","examples":[{"jp":"<ruby>都市部<rt>としぶ</rt></ruby>では<ruby>人口<rt>じんこう</rt></ruby>が<ruby>増<rt>ふ</rt></ruby>えている。一方、<ruby>地方<rt>ちほう</rt></ruby>では<ruby>過疎化<rt>かそか</rt></ruby>が<ruby>進<rt>すす</rt></ruby>んでいる。","plain":"としぶではじんこうがふえている。いっぽう、ちほうではかそかがすすんでいる。","cn":"都市地区人口在增加。另一方面,地方在加剧过疏化。"}]}]},"prev":{"id":39,"title":"書き言葉入門"},"next":{"id":41,"title":"観点と立場"}}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('lesson-data').textContent);
+  const lesson = data.lesson;
+  const prev = data.prev; // { id, title } | null
+  const next = data.next;
+
+  // Flatten "playable" sentences for the global play-all queue.
+  // group: 'main-N' / 'sub-N' / 'dialogue' (each has its own DOM nodes)
+  const playableGroups = []; // [{ groupId, items: [{ plain, el }] }]
+
+  // ---------- Masthead / nav ----------
+  const lessonNo = String(lesson.id).padStart(2, '0');
+  document.title = lesson.level + ' · 第' + lesson.id + '課 — ' + stripTags(lesson.title.jp);
+  document.getElementById('m-level').textContent = lesson.level + ' — Lesson ' + lessonNo;
+  document.getElementById('m-title-jp').innerHTML = lesson.title.jp;
+  document.getElementById('m-title-en').textContent = lesson.title.romaji + ' · ' + lesson.title.en;
+  document.getElementById('m-lesson-no').textContent = '第 ' + lesson.id + ' 課';
+  document.getElementById('footer-meta').textContent = '日本語 ' + lesson.level + ' · 第' + lesson.id + '課';
+
+  const navEl = document.getElementById('lesson-nav');
+  const navParts = [];
+  navParts.push('<a href="index.html">← 索引</a>');
+  navParts.push('<span>/</span>');
+  if (prev) {
+    navParts.push('<a href="lesson-' + String(prev.id).padStart(2, '0') + '.html">第' + prev.id + '課</a>');
+    navParts.push('<span>/</span>');
+  }
+  navParts.push('<span class="current">第' + lesson.id + '課</span>');
+  if (next) {
+    navParts.push('<span>/</span>');
+    navParts.push('<a href="lesson-' + String(next.id).padStart(2, '0') + '.html">第' + next.id + '課 →</a>');
+  }
+  navEl.innerHTML = navParts.join(' ');
+
+  // ---------- Goals ----------
+  const goalsList = document.getElementById('goals-list');
+  if (lesson.goals && lesson.goals.length) {
+    lesson.goals.forEach(g => {
+      const li = document.createElement('li');
+      li.textContent = g;
+      goalsList.appendChild(li);
+    });
+  } else {
+    document.getElementById('goals-block').hidden = true;
+  }
+
+  // ---------- Articles ----------
+  const articlesEl = document.getElementById('articles');
+  lesson.articles.forEach((article, ai) => {
+    const wrap = document.createElement('article');
+    wrap.className = 'article';
+    const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
+    wrap.id = 'article-' + groupId;
+
+    const meta = document.createElement('div');
+    meta.className = 'article-meta';
+    meta.textContent = article.kind === 'main' ? '主篇 · main reading' : '配篇 · companion reading';
+    wrap.appendChild(meta);
+
+    const h2 = document.createElement('h2');
+    h2.className = 'article-title';
+    h2.innerHTML = article.title.jp + '<span class="ja-small">' + escapeHtml(article.title.cn) + '</span>';
+    wrap.appendChild(h2);
+
+    const items = [];
+    article.sentences.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'sentence';
+      div.dataset.group = groupId;
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="jp-text">' + s.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(s.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(s.cn) + '</div>';
+      wrap.appendChild(div);
+      items.push({ plain: s.plain, el: div });
+    });
+
+    articlesEl.appendChild(wrap);
+    playableGroups.push({ groupId, items });
+  });
+
+  // ---------- Dialogue ----------
+  if (lesson.dialogue && lesson.dialogue.lines && lesson.dialogue.lines.length) {
+    document.getElementById('dialogue-divider').hidden = false;
+    document.getElementById('dialogue-block').hidden = false;
+    const sceneEl = document.getElementById('dialogue-scene');
+    sceneEl.textContent = lesson.dialogue.scene.jp + ' / ' + lesson.dialogue.scene.cn;
+    const linesEl = document.getElementById('dialogue-lines');
+    const items = [];
+    lesson.dialogue.lines.forEach((line, i) => {
+      const div = document.createElement('div');
+      div.className = 'dialogue-line';
+      div.dataset.group = 'dialogue';
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="speaker">' + escapeHtml(line.speaker) + '</div>' +
+        '<div class="jp-text">' + line.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(line.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(line.cn) + '</div>';
+      linesEl.appendChild(div);
+      items.push({ plain: line.plain, el: div });
+    });
+    playableGroups.push({ groupId: 'dialogue', items });
+  }
+
+  // ---------- Questions ----------
+  if (lesson.questions && lesson.questions.length) {
+    document.getElementById('questions-divider').hidden = false;
+    const qBlock = document.getElementById('questions-block');
+    qBlock.hidden = false;
+    lesson.questions.forEach((qa, i) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerHTML =
+        '<div class="question-q">' +
+          '<span class="q-mark">Q' + (i + 1) + '</span>' +
+          '<div class="jp-text">' + qa.q.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.q.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.q.cn) + '</div>' +
+        '</div>' +
+        '<div class="question-a">' +
+          '<span class="q-mark">A</span>' +
+          '<div class="jp-text">' + qa.a.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.a.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.a.cn) + '</div>' +
+          (qa.hint ? '<div class="question-hint">提示：' + escapeHtml(qa.hint) + '</div>' : '') +
+        '</div>';
+      qBlock.appendChild(div);
+    });
+  }
+
+  // ---------- Vocabulary ----------
+  const vocabGrid = document.getElementById('vocab-grid');
+  lesson.vocabulary.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'vocab-item';
+    div.innerHTML =
+      '<div class="vocab-jp">' + escapeHtml(v.jp) + (v.pos ? '<span class="vocab-pos">' + escapeHtml(v.pos) + '</span>' : '') + '</div>' +
+      '<div class="vocab-kana">' + escapeHtml(v.kana) + '</div>' +
+      '<div class="vocab-romaji">' + escapeHtml(v.romaji) + '</div>' +
+      '<div class="vocab-meaning">' + escapeHtml(v.meaning) + '</div>';
+    vocabGrid.appendChild(div);
+  });
+
+  // ---------- Grammar ----------
+  const grammarNotes = document.getElementById('grammar-notes');
+  lesson.grammar.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'grammar-point';
+    let ex = '';
+    if (g.examples && g.examples.length) {
+      ex = '<div class="grammar-examples">' +
+        g.examples.map(e =>
+          '<div class="grammar-example">' +
+            '<div class="ex-jp">' + e.jp + '</div>' +
+            '<div class="ex-cn">' + escapeHtml(e.cn) + '</div>' +
+          '</div>'
+        ).join('') +
+        '</div>';
+    }
+    div.innerHTML =
+      '<div><span class="grammar-pattern">' + escapeHtml(g.pattern) + '</span>' +
+      '<span class="grammar-name">' + escapeHtml(g.name) + '</span></div>' +
+      '<div class="grammar-explain">' + escapeHtml(g.explain) + '</div>' +
+      ex;
+    grammarNotes.appendChild(div);
+  });
+
+  // ---------- Toggles ----------
+  document.querySelectorAll('.toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.toggle;
+      const state = btn.dataset.state;
+      document.querySelectorAll('.toggle[data-toggle="' + type + '"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (state === 'off') document.body.classList.add('hide-' + type);
+      else document.body.classList.remove('hide-' + type);
+    });
+  });
+
+  // ---------- Speech ----------
+  const synth = window.speechSynthesis;
+  let jaVoice = null;
+  const ttsStatus = document.getElementById('tts-status');
+  const nowReading = document.getElementById('now-reading');
+  const speedSelect = document.getElementById('speed-select');
+
+  function pickJapaneseVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    const preferred = voices.find(v => v.lang === 'ja-JP' && /Kyoko|Otoya|O-ren|Google/i.test(v.name));
+    jaVoice = preferred || voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) {
+      ttsStatus.textContent = '音声 · ' + jaVoice.name.split(' ')[0];
+      ttsStatus.classList.remove('unavailable');
+    } else {
+      ttsStatus.textContent = '音声 · 未対応';
+      ttsStatus.classList.add('unavailable');
+    }
+  }
+
+  if (synth) {
+    pickJapaneseVoice();
+    synth.onvoiceschanged = pickJapaneseVoice;
+  } else {
+    ttsStatus.textContent = '音声 · 未対応';
+    ttsStatus.classList.add('unavailable');
+  }
+
+  let queue = [];
+  let isPlaying = false;
+
+  function speak(text, onEnd) {
+    if (!synth) { onEnd && onEnd(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = parseFloat(speedSelect.value);
+    u.pitch = 1.0;
+    u.onend = () => onEnd && onEnd();
+    u.onerror = () => onEnd && onEnd();
+    synth.speak(u);
+  }
+
+  function clearPlaying() {
+    document.querySelectorAll('.sentence.playing, .dialogue-line.playing').forEach(s => s.classList.remove('playing'));
+  }
+
+  function findItem(groupId, index) {
+    const g = playableGroups.find(g => g.groupId === groupId);
+    return g ? g.items[index] : null;
+  }
+
+  function playItem(groupId, index) {
+    if (!synth) return;
+    synth.cancel();
+    clearPlaying();
+    const item = findItem(groupId, index);
+    if (!item) return;
+    item.el.classList.add('playing');
+    nowReading.textContent = item.plain;
+    speak(item.plain, () => {
+      item.el.classList.remove('playing');
+      if (queue.length > 0) {
+        const next = queue.shift();
+        playItem(next.group, next.index);
+      } else {
+        isPlaying = false;
+        nowReading.textContent = '完了 / done';
+      }
+    });
+  }
+
+  document.querySelectorAll('.sentence, .dialogue-line').forEach(el => {
+    el.addEventListener('click', () => {
+      queue = [];
+      isPlaying = true;
+      playItem(el.dataset.group, parseInt(el.dataset.index, 10));
+    });
+  });
+
+  document.getElementById('play-all').addEventListener('click', () => {
+    if (!synth) return;
+    if (isPlaying) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+      nowReading.textContent = '一時停止 / paused';
+      return;
+    }
+    queue = [];
+    playableGroups.forEach(g => {
+      g.items.forEach((_, i) => queue.push({ group: g.groupId, index: i }));
+    });
+    if (queue.length === 0) return;
+    isPlaying = true;
+    const first = queue.shift();
+    playItem(first.group, first.index);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && synth) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+    }
+  });
+
+  // ---------- helpers ----------
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function stripTags(s) { return String(s).replace(/<[^>]*>/g, ''); }
+})();
+</script>
+</body>
+</html>

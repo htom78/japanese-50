@@ -1,0 +1,133 @@
+/* ============================================================
+   Shared design tokens — Japanese 50 課 v2 redesign
+   Direction: "Quiet Mastery" — Japanese craft × editorial
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --bg: #F7F4EE;          /* washi paper */
+  --bg-tint: #EFEAE0;     /* slightly darker fold */
+  --surface: #FFFFFF;
+  --surface-elev: #FBF9F4;
+
+  /* Ink */
+  --ink: #1A1814;
+  --ink-2: #3D3833;
+  --ink-3: #6B6258;
+  --ink-4: #9A9388;       /* muted */
+  --ink-5: #C8C2B8;
+
+  /* Borders / strokes */
+  --line: rgba(26, 24, 20, 0.08);
+  --line-2: rgba(26, 24, 20, 0.16);
+
+  /* Accents */
+  --indigo: #2C5F7F;       /* 藍染 — primary accent */
+  --indigo-soft: #DCE5EC;  /* tonal background */
+  --vermillion: #B8553F;   /* 朱 — strong accent, sparingly */
+  --moss: #6B7553;         /* 苔 — tertiary tonal */
+  --sand: #C9B89A;         /* 砂 — tonal */
+
+  /* Type tokens */
+  --font-display-en: "Cabinet Grotesk", "Geist", -apple-system, sans-serif;
+  --font-display-jp: "Noto Serif JP", serif;
+  --font-body-en: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body-jp: "Noto Sans JP", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --s-10: 128px;
+
+  /* Radius */
+  --r-s: 4px;
+  --r-m: 12px;
+  --r-l: 24px;
+  --r-xl: 36px;
+
+  /* Shadows — tinted to bg */
+  --shadow-soft: 0 1px 0 rgba(26,24,20,0.04), 0 12px 32px -16px rgba(26,24,20,0.10);
+  --shadow-lift: 0 1px 0 rgba(26,24,20,0.05), 0 24px 60px -24px rgba(26,24,20,0.18);
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); }
+body {
+  font-family: var(--font-body-jp), var(--font-body-en);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "palt";
+  /* subtle paper grain */
+  background-image:
+    radial-gradient(at 12% 14%, rgba(44, 95, 127, 0.04) 0%, transparent 40%),
+    radial-gradient(at 88% 86%, rgba(184, 85, 63, 0.03) 0%, transparent 40%);
+}
+
+/* Stamp / chip */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.kicker--accent { color: var(--indigo); }
+
+/* hairline rule */
+.rule { display: block; height: 1px; background: var(--line); border: 0; }
+
+/* link */
+.txt-link {
+  text-decoration: none;
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+  transition: color 200ms var(--ease), border-color 200ms var(--ease);
+}
+.txt-link:hover { color: var(--indigo); border-bottom-color: var(--indigo); }
+
+/* button */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-display-en);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  padding: 12px 20px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  cursor: pointer;
+  transition: all 240ms var(--ease);
+}
+.btn:hover { transform: translateY(-1px); }
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* SVG seal: minimum hanko-style stamp for accents */
+.seal {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  background: var(--vermillion);
+  color: #FFFFFF;
+  font-family: var(--font-display-jp);
+  font-size: 14px;
+  font-weight: 600;
+}

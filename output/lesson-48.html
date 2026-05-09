@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N2 · 第48課 — 文化と社会</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #F5F1E8;
+    --bg-elevated: #FAF8F3;
+    --bg-overlay: #FFFEF9;
+    --fg-primary: #2A2620;
+    --fg-secondary: #5C544A;
+    --fg-tertiary: #8C8275;
+    --border-subtle: rgba(42, 38, 32, 0.08);
+    --border-default: rgba(42, 38, 32, 0.14);
+    --accent: #A8895C;
+    --accent-hover: #B89968;
+    --accent-soft: rgba(168, 137, 92, 0.12);
+
+    --serif-jp: "Noto Serif JP", serif;
+    --sans-jp: "Noto Sans JP", sans-serif;
+    --sans-en: "IBM Plex Sans", sans-serif;
+    --mono: "IBM Plex Mono", monospace;
+
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-base);
+    color: var(--fg-primary);
+    font-family: var(--sans-jp);
+    font-size: 14px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(at 20% 10%, rgba(168, 137, 92, 0.04) 0%, transparent 50%),
+      radial-gradient(at 80% 90%, rgba(168, 137, 92, 0.03) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* Header */
+  .masthead {
+    border-bottom: 1px solid var(--border-default);
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+  }
+
+  .masthead-title {
+    font-family: var(--serif-jp);
+    font-weight: 500;
+  }
+
+  .masthead-title .level {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .masthead-title .title-jp {
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--fg-primary);
+  }
+
+  .masthead-title .title-en {
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .masthead-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* Goals */
+  .goals {
+    background: var(--bg-elevated);
+    border-left: 2px solid var(--accent);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .goals-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .goals ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .goals li {
+    font-size: 12px;
+    color: var(--fg-secondary);
+    line-height: 1.7;
+  }
+
+  /* Lesson nav */
+  .lesson-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.05em;
+  }
+
+  .lesson-nav a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms var(--ease);
+  }
+
+  .lesson-nav a:hover { border-bottom-color: var(--accent); }
+
+  .lesson-nav .current { color: var(--fg-secondary); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .control-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .toggle-group {
+    display: inline-flex;
+    border: 1px solid var(--border-default);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .toggle {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    font-family: var(--sans-en);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    border-right: 1px solid var(--border-default);
+  }
+
+  .toggle:last-child { border-right: none; }
+
+  .toggle:hover { color: var(--fg-primary); }
+
+  .toggle.active {
+    background: var(--accent);
+    color: var(--bg-overlay);
+  }
+
+  .speed-select {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  /* Audio control */
+  .audio-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: 4px;
+    margin-bottom: 40px;
+  }
+
+  .play-btn {
+    background: var(--fg-primary);
+    color: var(--bg-overlay);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 200ms var(--ease);
+    flex-shrink: 0;
+  }
+
+  .play-btn:hover { background: var(--accent); }
+
+  .play-btn svg { width: 14px; height: 14px; }
+
+  .audio-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .audio-info-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: 2px;
+  }
+
+  .audio-info-text {
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Article */
+  .article-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .article-title {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--fg-primary);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .article-title .ja-small {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    margin-left: 12px;
+    font-weight: 400;
+    font-family: var(--sans-en);
+    font-style: italic;
+  }
+
+  .article + .article {
+    margin-top: 48px;
+  }
+
+  /* Sentence */
+  .sentence {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 200ms var(--ease);
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .sentence:hover { background: var(--accent-soft); }
+  .sentence.playing { background: var(--accent-soft); }
+
+  .sentence.playing::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .jp-text {
+    font-family: var(--serif-jp);
+    font-size: 18px;
+    line-height: 2.1;
+    color: var(--fg-primary);
+    letter-spacing: 0.02em;
+  }
+
+  /* Furigana via ruby */
+  ruby { ruby-position: over; }
+
+  rt {
+    font-family: var(--sans-jp);
+    font-size: 0.5em;
+    color: var(--fg-tertiary);
+    font-weight: 400;
+    letter-spacing: 0;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-furigana rt { opacity: 0; }
+
+  .romaji {
+    font-family: var(--sans-en);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    line-height: 1.6;
+    margin-top: 6px;
+    letter-spacing: 0.01em;
+    transition: opacity 300ms var(--ease);
+  }
+
+  body.hide-romaji .romaji { display: none; }
+
+  .translation {
+    font-family: var(--sans-jp);
+    font-size: 12px;
+    color: var(--fg-secondary);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  body.hide-translation .translation { display: none; }
+
+  /* Dialogue */
+  .dialogue-scene {
+    font-size: 12px;
+    color: var(--fg-tertiary);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+    border-radius: 2px;
+  }
+
+  .dialogue-line { padding: 12px 0 12px 16px; border-bottom: 1px solid var(--border-subtle); border-left: 2px solid transparent; cursor: pointer; transition: all 200ms var(--ease); margin: 0 -16px; padding-right: 16px; }
+  .dialogue-line:hover { background: var(--accent-soft); border-left-color: var(--accent); }
+  .dialogue-line.playing { background: var(--accent-soft); border-left-color: var(--accent); }
+
+  .speaker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* Questions */
+  .question {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .question-q { margin-bottom: 8px; }
+  .question-a { padding-left: 16px; border-left: 2px solid var(--accent-soft); margin-top: 6px; }
+  .q-mark { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .question-hint {
+    font-family: var(--sans-jp);
+    font-size: 11px;
+    color: var(--fg-tertiary);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* Notes section */
+  .section-divider {
+    margin: 64px 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-default);
+  }
+
+  .section-divider-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+  }
+
+  .vocab-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+
+  .vocab-item {
+    display: grid;
+    grid-template-columns: minmax(80px, 0.9fr) minmax(100px, 1fr) minmax(60px, 0.5fr) 2fr;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: baseline;
+  }
+
+  .vocab-jp { font-family: var(--serif-jp); font-size: 15px; color: var(--fg-primary); }
+  .vocab-kana { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-secondary); }
+  .vocab-romaji { font-family: var(--sans-en); font-style: italic; font-size: 12px; color: var(--fg-tertiary); }
+  .vocab-meaning { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); }
+  .vocab-pos { font-family: var(--mono); font-size: 9px; color: var(--accent); margin-left: 6px; letter-spacing: 0.05em; }
+
+  .grammar-point { padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .grammar-pattern { font-family: var(--mono); font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 2px; display: inline-block; margin-bottom: 8px; }
+  .grammar-name { font-family: var(--sans-jp); font-size: 12px; color: var(--fg-tertiary); margin-left: 8px; }
+  .grammar-explain { font-family: var(--sans-jp); font-size: 13px; color: var(--fg-secondary); line-height: 1.75; margin-bottom: 10px; }
+  .grammar-examples { background: var(--bg-elevated); padding: 10px 14px; border-radius: 2px; font-size: 13px; }
+  .grammar-example { padding: 4px 0; }
+  .grammar-example .ex-jp { font-family: var(--serif-jp); color: var(--fg-primary); }
+  .grammar-example .ex-cn { font-size: 11px; color: var(--fg-tertiary); margin-top: 2px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-default);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .tts-status { font-family: var(--mono); font-size: 10px; color: var(--fg-tertiary); letter-spacing: 0.05em; }
+  .tts-status.unavailable { color: #8B4513; }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 20px 64px; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .masthead-meta { text-align: left; }
+    .jp-text { font-size: 17px; }
+    .vocab-item { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+    .controls { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <nav class="lesson-nav" id="lesson-nav"></nav>
+
+    <header class="masthead">
+      <div class="masthead-title">
+        <span class="level" id="m-level"></span>
+        <h1 class="title-jp" id="m-title-jp"></h1>
+        <div class="title-en" id="m-title-en"></div>
+      </div>
+      <div class="masthead-meta">
+        <div id="m-lesson-no"></div>
+        <div id="tts-status" class="tts-status">音声 · loading…</div>
+      </div>
+    </header>
+
+    <div class="goals" id="goals-block">
+      <div class="goals-label">学習目標 · goals</div>
+      <ul id="goals-list"></ul>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="control-label">Furigana</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="furigana" data-state="on">On</button>
+          <button class="toggle" data-toggle="furigana" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Romaji</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="romaji" data-state="on">On</button>
+          <button class="toggle" data-toggle="romaji" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">中文</span>
+        <div class="toggle-group">
+          <button class="toggle active" data-toggle="translation" data-state="on">On</button>
+          <button class="toggle" data-toggle="translation" data-state="off">Off</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Speed</span>
+        <select class="speed-select" id="speed-select">
+          <option value="0.7">0.7×</option>
+          <option value="0.85" selected>0.85×</option>
+          <option value="1.0">1.0×</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="audio-bar">
+      <button class="play-btn" id="play-all" aria-label="播放全文">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="audio-info">
+        <div class="audio-info-label">Now reading</div>
+        <div class="audio-info-text" id="now-reading">クリックで再生 / Click sentence to play</div>
+      </div>
+    </div>
+
+    <div id="articles"></div>
+
+    <div class="section-divider" id="dialogue-divider" hidden>
+      <span class="section-divider-text">対話 · dialogue</span>
+    </div>
+    <section id="dialogue-block" hidden>
+      <div class="dialogue-scene" id="dialogue-scene"></div>
+      <div id="dialogue-lines"></div>
+    </section>
+
+    <div class="section-divider" id="questions-divider" hidden>
+      <span class="section-divider-text">理解問題 · comprehension</span>
+    </div>
+    <section id="questions-block" hidden></section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">語彙 · vocabulary</span>
+    </div>
+    <section class="notes">
+      <div class="vocab-grid" id="vocab-grid"></div>
+    </section>
+
+    <div class="section-divider">
+      <span class="section-divider-text">文法 · grammar</span>
+    </div>
+    <section class="notes" id="grammar-notes"></section>
+
+    <footer class="footer">
+      <span id="footer-meta"></span>
+      <span>web speech api</span>
+    </footer>
+
+  </div>
+
+<script id="lesson-data" type="application/json">{"lesson":{"id":48,"level":"N2","title":{"jp":"文化と社会","romaji":"bunka to shakai","cn":"文化与社会","en":"Culture and Society"},"goals":["综合运用 N5-N2 的书面语法表达","理解日本四季文化与文学的深层联系","能阅读较长的文化散文，把握其美学逻辑"],"articles":[{"kind":"main","title":{"jp":"日本の四季と文学","romaji":"nihon no shiki to bungaku","cn":"日本的四季与文学"},"sentences":[{"jp":"<ruby>日本人<rt>にほんじん</rt></ruby>にとって、<ruby>四季<rt>しき</rt></ruby>は<ruby>単<rt>たん</rt></ruby>なる<ruby>気候<rt>きこう</rt></ruby>の<ruby>変化<rt>へんか</rt></ruby>ではない。","plain":"にほんじんにとって、しきはたんなるきこうのへんかではない。","romaji":"nihonjin ni totte, shiki wa tan naru kikou no henka de wa nai.","cn":"对日本人而言，四季并非单纯的气候变化。"},{"jp":"それは<ruby>感性<rt>かんせい</rt></ruby>を<ruby>磨<rt>みが</rt></ruby>き、<ruby>言葉<rt>ことば</rt></ruby>を<ruby>豊<rt>ゆた</rt></ruby>かにする、<ruby>文化<rt>ぶんか</rt></ruby>の<ruby>根<rt>ね</rt></ruby>そのものなのである。","plain":"それはかんせいをみがき、ことばをゆたかにする、ぶんかのねそのものなのである。","romaji":"sore wa kansei o migaki, kotoba o yutaka ni suru, bunka no ne sono mono na no de aru.","cn":"它是磨砺感性、丰富语言的——文化之根本身。"},{"jp":"<ruby>春<rt>はる</rt></ruby>になれば、<ruby>桜<rt>さくら</rt></ruby>が<ruby>咲<rt>さ</rt></ruby>き、<ruby>人々<rt>ひとびと</rt></ruby>は<ruby>木<rt>こ</rt></ruby>の<ruby>下<rt>した</rt></ruby>に<ruby>集<rt>あつ</rt></ruby>まる。","plain":"はるになれば、さくらがさき、ひとびとはこのしたにあつまる。","romaji":"haru ni nareba, sakura ga saki, hitobito wa ko no shita ni atsumaru.","cn":"春天到来，樱花盛开，人们便聚集在树下。"},{"jp":"<ruby>満開<rt>まんかい</rt></ruby>の<ruby>桜<rt>さくら</rt></ruby>はわずか<ruby>一週間<rt>いっしゅうかん</rt></ruby>ほどで<ruby>散<rt>ち</rt></ruby>ってしまうにもかかわらず、その<ruby>儚<rt>はかな</rt></ruby>さこそが<ruby>美<rt>うつく</rt></ruby>しさの<ruby>本質<rt>ほんしつ</rt></ruby>である。","plain":"まんかいのさくらはわずかいっしゅうかんほどでちってしまうにもかかわらず、そのはかなさこそがうつくしさのほんしつである。","romaji":"mankai no sakura wa wazuka isshuukan hodo de chitte shimau ni mo kakawarazu, sono hakanasa koso ga utsukushisa no honshitsu de aru.","cn":"满开的樱花虽仅仅一周左右便会凋落，正是这种短暂才是美的本质。"},{"jp":"<ruby>古来<rt>こらい</rt></ruby>、<ruby>歌人<rt>かじん</rt></ruby>たちは<ruby>桜<rt>さくら</rt></ruby>を<ruby>通<rt>とお</rt></ruby>して<ruby>人生<rt>じんせい</rt></ruby>の<ruby>無常<rt>むじょう</rt></ruby>を<ruby>歌<rt>うた</rt></ruby>ってきたのである。","plain":"こらい、かじんたちはさくらをとおしてじんせいのむじょうをうたってきたのである。","romaji":"korai, kajin-tachi wa sakura o tooshite jinsei no mujou o utatte kita no de aru.","cn":"自古以来，歌人们便通过樱花歌咏人生的无常。"},{"jp":"<ruby>夏<rt>なつ</rt></ruby>になると、<ruby>蝉<rt>せみ</rt></ruby>の<ruby>声<rt>こえ</rt></ruby>が<ruby>森<rt>もり</rt></ruby>を<ruby>満<rt>み</rt></ruby>たす。","plain":"なつになると、せみのこえがもりをみたす。","romaji":"natsu ni naru to, semi no koe ga mori o mitasu.","cn":"一到夏天，蝉声便充盈森林。"},{"jp":"<ruby>松尾芭蕉<rt>まつおばしょう</rt></ruby>の<ruby>有名<rt>ゆうめい</rt></ruby>な<ruby>句<rt>く</rt></ruby>「<ruby>閑<rt>しずか</rt></ruby>さや<ruby>岩<rt>いわ</rt></ruby>にしみ<ruby>入<rt>い</rt></ruby>る<ruby>蝉<rt>せみ</rt></ruby>の<ruby>声<rt>こえ</rt></ruby>」は、<ruby>音<rt>おと</rt></ruby>と<ruby>静寂<rt>せいじゃく</rt></ruby>の<ruby>逆説<rt>ぎゃくせつ</rt></ruby>を<ruby>見事<rt>みごと</rt></ruby>に<ruby>捉<rt>とら</rt></ruby>えている。","plain":"まつおばしょうのゆうめいなく「しずかさやいわにしみいるせみのこえ」は、おととせいじゃくのぎゃくせつをみごとにとらえている。","romaji":"Matsuo Bashou no yuumei na ku \"shizukasa ya iwa ni shimiiru semi no koe\" wa, oto to seijaku no gyakusetsu o migoto ni toraete iru.","cn":"松尾芭蕉的名句\"幽静啊—渗入岩石的蝉声\"，绝妙地捕捉了声音与寂静的悖论。"},{"jp":"<ruby>音<rt>おと</rt></ruby>がうるさいからこそ、<ruby>逆<rt>ぎゃく</rt></ruby>に<ruby>静<rt>しず</rt></ruby>けさを<ruby>感<rt>かん</rt></ruby>じる——これは<ruby>日本的<rt>にほんてき</rt></ruby>美意識<rt>びいしき</rt></ruby>の<ruby>典型<rt>てんけい</rt></ruby>である。","plain":"おとがうるさいからこそ、ぎゃくにしずけさをかんじる——これはにほんてきびいしきのてんけいである。","romaji":"oto ga urusai kara koso, gyaku ni shizukesa o kanjiru—kore wa nihon-teki biishiki no tenkei de aru.","cn":"正因为声音吵闹，反而感到寂静——这正是日本式美学意识的典型。"},{"jp":"<ruby>秋<rt>あき</rt></ruby>は、<ruby>月<rt>つき</rt></ruby>を<ruby>愛<rt>め</rt></ruby>でる<ruby>季節<rt>きせつ</rt></ruby>である。","plain":"あきは、つきをめでるきせつである。","romaji":"aki wa, tsuki o mederu kisetsu de aru.","cn":"秋天，是赏月的季节。"},{"jp":"<ruby>中秋<rt>ちゅうしゅう</rt></ruby>の<ruby>名月<rt>めいげつ</rt></ruby>は<ruby>古来<rt>こらい</rt></ruby>から<ruby>多<rt>おお</rt></ruby>くの<ruby>歌人<rt>かじん</rt></ruby>に<ruby>詠<rt>よ</rt></ruby>まれてきたわけだが、<ruby>月<rt>つき</rt></ruby>そのものを<ruby>美<rt>うつく</rt></ruby>しいと<ruby>感<rt>かん</rt></ruby>じる<ruby>感性<rt>かんせい</rt></ruby>は<ruby>日本<rt>にほん</rt></ruby>に<ruby>限<rt>かぎ</rt></ruby>らない。","plain":"ちゅうしゅうのめいげつはこらいからおおくのかじんによまれてきたわけだが、つきそのものをうつくしいとかんじるかんせいはにほんにかぎらない。","romaji":"chuushuu no meigetsu wa korai kara ooku no kajin ni yomarete kita wake da ga, tsuki sono mono o utsukushii to kanjiru kansei wa Nihon ni kagiranai.","cn":"中秋名月自古便被许多歌人吟咏，然而觉得月亮本身美丽的感性，并不限于日本。"},{"jp":"むしろ、<ruby>月<rt>つき</rt></ruby>に<ruby>映<rt>うつ</rt></ruby>る<ruby>影<rt>かげ</rt></ruby>や、<ruby>欠<rt>か</rt></ruby>けゆく<ruby>形<rt>かたち</rt></ruby>に<ruby>季節<rt>きせつ</rt></ruby>の<ruby>移<rt>うつ</rt></ruby>ろいを<ruby>重<rt>かさ</rt></ruby>ねる<ruby>視点<rt>してん</rt></ruby>こそが、<ruby>日本的<rt>にほんてき</rt></ruby>な<ruby>独自<rt>どくじ</rt></ruby>性<rt>せい</rt>と<ruby>言<rt>い</rt></ruby>えよう。","plain":"むしろ、つきにうつるかげや、かけゆくかたちにきせつのうつろいをかさねるしてんこそが、にほんてきなどくじせいといえよう。","romaji":"mushiro, tsuki ni utsuru kage ya, kakeyuku katachi ni kisetsu no utsuroi o kasaneru shiten koso ga, nihon-teki na dokujisei to ieyou.","cn":"不如说，将月中投影、月之残形与季节流转相重叠的视点，方可谓日本式的独特性。"},{"jp":"<ruby>冬<rt>ふゆ</rt></ruby>の<ruby>雪<rt>ゆき</rt></ruby>は、<ruby>静寂<rt>せいじゃく</rt></ruby>を<ruby>運<rt>はこ</rt></ruby>んでくる。","plain":"ふゆのゆきは、せいじゃくをはこんでくる。","romaji":"fuyu no yuki wa, seijaku o hakonde kuru.","cn":"冬天的雪，带来寂静。"},{"jp":"<ruby>音<rt>おと</rt></ruby>を<ruby>吸<rt>す</rt></ruby>い<ruby>込<rt>こ</rt></ruby>む<ruby>白<rt>しろ</rt></ruby>い<ruby>世界<rt>せかい</rt></ruby>では、<ruby>普段<rt>ふだん</rt></ruby><ruby>気<rt>き</rt></ruby>づかぬ<ruby>細<rt>こま</rt></ruby>やかな<ruby>感覚<rt>かんかく</rt></ruby>がよみがえってくる。","plain":"おとをすいこむしろいせかいでは、ふだんきづかぬこまやかなかんかくがよみがえってくる。","romaji":"oto o suikomu shiroi sekai de wa, fudan kizukanu komayaka na kankaku ga yomigaette kuru.","cn":"在吸收声音的白色世界里，平日不曾察觉的细腻感觉会苏醒。"},{"jp":"<ruby>四季<rt>しき</rt></ruby>を<ruby>大切<rt>たいせつ</rt></ruby>にする<ruby>感性<rt>かんせい</rt></ruby>は、<ruby>豊<rt>ゆた</rt></ruby>かではあるものの、<ruby>近年<rt>きんねん</rt></ruby>の<ruby>気候<rt>きこう</rt></ruby><ruby>変動<rt>へんどう</rt></ruby>によって<ruby>失<rt>うしな</rt></ruby>われつつあるとも<ruby>言<rt>い</rt></ruby>われている。","plain":"しきをたいせつにするかんせいは、ゆたかではあるものの、きんねんのきこうへんどうによってうしなわれつつあるともいわれている。","romaji":"shiki o taisetsu ni suru kansei wa, yutaka de wa aru mono no, kinnen no kikou hendou ni yotte ushinaware tsutsu aru to mo iwarete iru.","cn":"珍视四季的感性虽然丰富，但据说也正因近年的气候变动而逐渐被失去。"},{"jp":"だからこそ、<ruby>古典<rt>こてん</rt></ruby><ruby>文学<rt>ぶんがく</rt></ruby>の<ruby>中<rt>なか</rt></ruby>に<ruby>残<rt>のこ</rt></ruby>る<ruby>四季<rt>しき</rt></ruby>の<ruby>言葉<rt>ことば</rt></ruby>を<ruby>読<rt>よ</rt></ruby>み<ruby>返<rt>かえ</rt></ruby>すことには、<ruby>大<rt>おお</rt></ruby>きな<ruby>意義<rt>いぎ</rt></ruby>がある。","plain":"だからこそ、こてんぶんがくのなかにのこるしきのことばをよみかえすことには、おおきないぎがある。","romaji":"dakara koso, koten bungaku no naka ni nokoru shiki no kotoba o yomikaesu koto ni wa, ookina igi ga aru.","cn":"正因如此，重读古典文学中遗存的四季之语，便有了重大意义。"},{"jp":"<ruby>言葉<rt>ことば</rt></ruby>は<ruby>記憶<rt>きおく</rt></ruby>の<ruby>器<rt>うつわ</rt></ruby>であり、<ruby>未来<rt>みらい</rt></ruby>へ<ruby>季節<rt>きせつ</rt></ruby>を<ruby>伝<rt>つた</rt></ruby>える<ruby>橋<rt>はし</rt></ruby>でもあるのだ。","plain":"ことばはきおくのうつわであり、みらいへきせつをつたえるはしでもあるのだ。","romaji":"kotoba wa kioku no utsuwa de ari, mirai e kisetsu o tsutaeru hashi de mo aru no da.","cn":"语言是记忆的容器，也是把季节传向未来的桥梁。"}]},{"kind":"companion","title":{"jp":"茶道の精神","romaji":"sadou no seishin","cn":"茶道精神"},"sentences":[{"jp":"<ruby>茶道<rt>さどう</rt></ruby>は<ruby>単<rt>たん</rt></ruby>に<ruby>茶<rt>ちゃ</rt></ruby>を<ruby>飲<rt>の</rt></ruby>む<ruby>芸事<rt>げいごと</rt></ruby>ではない。","plain":"さどうはたんにちゃをのむげいごとではない。","romaji":"sadou wa tan ni cha o nomu geigoto de wa nai.","cn":"茶道并非仅仅是饮茶的技艺。"},{"jp":"それは「<ruby>和敬清寂<rt>わけいせいじゃく</rt></ruby>」という<ruby>四<rt>よっ</rt></ruby>つの<ruby>理念<rt>りねん</rt></ruby>に<ruby>支<rt>ささ</rt></ruby>えられた<ruby>総合<rt>そうごう</rt></ruby><ruby>芸術<rt>げいじゅつ</rt></ruby>である。","plain":"それは「わけいせいじゃく」というよっつのりねんにささえられたそうごうげいじゅつである。","romaji":"sore wa \"wa-kei-sei-jaku\" to iu yottsu no rinen ni sasaerareta sougou geijutsu de aru.","cn":"它是受\"和敬清寂\"四理念支撑的综合艺术。"},{"jp":"「<ruby>和<rt>わ</rt></ruby>」とは<ruby>調和<rt>ちょうわ</rt></ruby>、「<ruby>敬<rt>けい</rt></ruby>」とは<ruby>敬意<rt>けいい</rt></ruby>、「<ruby>清<rt>せい</rt></ruby>」とは<ruby>清<rt>きよ</rt></ruby>らかさ、「<ruby>寂<rt>じゃく</rt></ruby>」とは<ruby>静<rt>しず</rt></ruby>けさである。","plain":"「わ」とはちょうわ、「けい」とはけいい、「せい」とはきよらかさ、「じゃく」とはしずけさである。","romaji":"\"wa\" to wa chouwa, \"kei\" to wa keii, \"sei\" to wa kiyorakasa, \"jaku\" to wa shizukesa de aru.","cn":"\"和\"为调和，\"敬\"为敬意，\"清\"为清净，\"寂\"为寂静。"},{"jp":"<ruby>客<rt>きゃく</rt></ruby>と<ruby>主人<rt>しゅじん</rt></ruby>は<ruby>互<rt>たが</rt></ruby>いに<ruby>敬<rt>うやま</rt></ruby>い、<ruby>一<rt>いっ</rt></ruby><ruby>椀<rt>わん</rt></ruby>の<ruby>茶<rt>ちゃ</rt></ruby>を<ruby>分<rt>わ</rt></ruby>かち<ruby>合<rt>あ</rt></ruby>う。","plain":"きゃくとしゅじんはたがいにうやまい、いちわんのちゃをわかちあう。","romaji":"kyaku to shujin wa tagai ni uyamai, ichiwan no cha o wakachi-au.","cn":"客与主人互相尊敬，分享一碗茶。"},{"jp":"<ruby>茶室<rt>ちゃしつ</rt></ruby>に<ruby>入<rt>はい</rt></ruby>るに<ruby>際<rt>さい</rt></ruby>しては、<ruby>身分<rt>みぶん</rt></ruby>や<ruby>地位<rt>ちい</rt></ruby>は<ruby>問<rt>と</rt></ruby>われない。","plain":"ちゃしつにはいるにさいしては、みぶんやちいはとわれない。","romaji":"chashitsu ni hairu ni saishite wa, mibun ya chii wa towarenai.","cn":"在进入茶室之时，身份地位不被过问。"},{"jp":"<ruby>狭<rt>せま</rt></ruby>い<ruby>入口<rt>いりぐち</rt></ruby>「<ruby>躙口<rt>にじりぐち</rt></ruby>」を<ruby>通<rt>とお</rt></ruby>るからこそ、<ruby>誰<rt>だれ</rt></ruby>もが<ruby>頭<rt>あたま</rt></ruby>を<ruby>下<rt>さ</rt></ruby>げて<ruby>入<rt>はい</rt></ruby>るわけだ。","plain":"せまいいりぐち「にじりぐち」をとおるからこそ、だれもがあたまをさげてはいるわけだ。","romaji":"semai iriguchi \"nijiriguchi\" o tooru kara koso, dare mo ga atama o sagete hairu wake da.","cn":"正因为要通过狭小的入口\"躙口\"，所以谁都得低头进入。"},{"jp":"<ruby>一期一会<rt>いちごいちえ</rt></ruby>——この<ruby>言葉<rt>ことば</rt></ruby>は<ruby>茶道<rt>さどう</rt></ruby>の<ruby>核心<rt>かくしん</rt></ruby>を<ruby>表<rt>あらわ</rt></ruby>している。","plain":"いちごいちえ——このことばはさどうのかくしんをあらわしている。","romaji":"ichigo-ichie—kono kotoba wa sadou no kakushin o arawashite iru.","cn":"一期一会——这一词语表达了茶道的核心。"},{"jp":"<ruby>同<rt>おな</rt></ruby>じ<ruby>瞬間<rt>しゅんかん</rt></ruby>は<ruby>二度<rt>にど</rt></ruby>と<ruby>訪<rt>おとず</rt></ruby>れない<ruby>以上<rt>いじょう</rt></ruby>、<ruby>今<rt>いま</rt></ruby>この<ruby>一<rt>いち</rt></ruby><ruby>椀<rt>わん</rt></ruby>を<ruby>大切<rt>たいせつ</rt></ruby>にしなければならない。","plain":"おなじしゅんかんはにどとおとずれないいじょう、いまこのいちわんをたいせつにしなければならない。","romaji":"onaji shunkan wa nido to otozurenai ijou, ima kono ichiwan o taisetsu ni shinakereba naranai.","cn":"相同的瞬间不会再次到来，因此必须珍惜眼前这一碗茶。"},{"jp":"この<ruby>精神<rt>せいしん</rt></ruby>こそが、<ruby>現代<rt>げんだい</rt></ruby>の<ruby>慌<rt>あわ</rt></ruby>ただしい<ruby>生活<rt>せいかつ</rt></ruby>に<ruby>欠<rt>か</rt></ruby>けがちなものではないだろうか。","plain":"このせいしんこそが、げんだいのあわただしいせいかつにかけがちなものではないだろうか。","romaji":"kono seishin koso ga, gendai no awatadashii seikatsu ni kakegachi na mono de wa nai darou ka.","cn":"这种精神，不正是现代忙碌生活中所欠缺的吗？"},{"jp":"<ruby>茶<rt>ちゃ</rt></ruby>を<ruby>点<rt>た</rt></ruby>てるその<ruby>所作<rt>しょさ</rt></ruby>の<ruby>一<rt>ひと</rt></ruby>つ<ruby>一<rt>ひと</rt></ruby>つに、<ruby>千年<rt>せんねん</rt></ruby>の<ruby>美学<rt>びがく</rt></ruby>が<ruby>息<rt>いき</rt></ruby>づいているのである。","plain":"ちゃをたてるそのしょさのひとつひとつに、せんねんのびがくがいきづいているのである。","romaji":"cha o tateru sono shosa no hitotsu hitotsu ni, sennen no bigaku ga ikizuite iru no de aru.","cn":"点茶的每一个动作里，都跳动着千年的美学。"}]}],"dialogue":{"scene":{"jp":"文化研究者と編集者が日本美学について語り合う。","cn":"文化研究者与编辑就日本美学进行讨论。"},"lines":[{"speaker":"研究者","jp":"<ruby>日本<rt>にほん</rt></ruby>の<ruby>美意識<rt>びいしき</rt></ruby>の<ruby>核心<rt>かくしん</rt></ruby>は、<ruby>不完全<rt>ふかんぜん</rt></ruby>さを<ruby>愛<rt>あい</rt></ruby>する<ruby>姿勢<rt>しせい</rt></ruby>にあると<ruby>言<rt>い</rt></ruby>えるでしょう。","plain":"にほんのびいしきのかくしんは、ふかんぜんさをあいするしせいにあるといえるでしょう。","romaji":"Nihon no biishiki no kakushin wa, fukanzen-sa o ai suru shisei ni aru to ieru deshou.","cn":"日本美学意识的核心，可说是在于热爱不完全的姿态。"},{"speaker":"編集者","jp":"いわゆる「わびさび」ですね。<ruby>欧米<rt>おうべい</rt></ruby>の<ruby>完璧<rt>かんぺき</rt></ruby>な<ruby>美<rt>び</rt></ruby>とは<ruby>対照的<rt>たいしょうてき</rt></ruby>です。","plain":"いわゆる「わびさび」ですね。おうべいのかんぺきなびとはたいしょうてきです。","romaji":"iwayuru \"wabi-sabi\" desu ne. Oubei no kanpeki na bi to wa taishouteki desu.","cn":"就是所谓\"侘寂\"吧。与欧美的完美之美形成对照。"},{"speaker":"研究者","jp":"ええ。<ruby>欠<rt>か</rt></ruby>けたものこそ<ruby>美<rt>うつく</rt></ruby>しいという<ruby>発想<rt>はっそう</rt></ruby>は、<ruby>仏教<rt>ぶっきょう</rt></ruby>の<ruby>無常観<rt>むじょうかん</rt></ruby>と<ruby>深<rt>ふか</rt></ruby>く<ruby>結<rt>むす</rt></ruby>びついています。","plain":"ええ。かけたものこそうつくしいというはっそうは、ぶっきょうのむじょうかんとふかくむすびついています。","romaji":"ee. kaketa mono koso utsukushii to iu hassou wa, bukkyou no mujoukan to fukaku musubitsuite imasu.","cn":"是的。\"残缺方为美\"的发想，与佛教的无常观深深关联。"},{"speaker":"編集者","jp":"<ruby>桜<rt>さくら</rt></ruby>が<ruby>散<rt>ち</rt></ruby>るからこそ<ruby>美<rt>うつく</rt></ruby>しい——という<ruby>感覚<rt>かんかく</rt></ruby>と<ruby>同<rt>おな</rt></ruby>じわけですね。","plain":"さくらがちるからこそうつくしい——というかんかくとおなじわけですね。","romaji":"sakura ga chiru kara koso utsukushii—to iu kankaku to onaji wake desu ne.","cn":"与\"樱花因凋落才美丽\"的感觉是一样的吧。"},{"speaker":"研究者","jp":"その<ruby>通<rt>とお</rt></ruby>りです。<ruby>儚<rt>はかな</rt></ruby>さを<ruby>受<rt>う</rt></ruby>け<ruby>入<rt>い</rt></ruby>れることが、かえって<ruby>瞬間<rt>しゅんかん</rt></ruby>を<ruby>濃<rt>こ</rt></ruby>くするのです。","plain":"そのとおりです。はかなさをうけいれることが、かえってしゅんかんをこくするのです。","romaji":"sono toori desu. hakanasa o ukeireru koto ga, kaette shunkan o koku suru no desu.","cn":"正是如此。接受短暂，反而使瞬间变得浓烈。"},{"speaker":"編集者","jp":"<ruby>現代<rt>げんだい</rt></ruby>のせわしない<ruby>社会<rt>しゃかい</rt></ruby>にこそ、こうした<ruby>視点<rt>してん</rt></ruby>が<ruby>必要<rt>ひつよう</rt></ruby>かもしれませんね。","plain":"げんだいのせわしないしゃかいにこそ、こうしたしてんがひつようかもしれませんね。","romaji":"gendai no sewashinai shakai ni koso, koushita shiten ga hitsuyou ka mo shiremasen ne.","cn":"正是在繁忙的现代社会，或许更需要这种视点。"}]},"questions":[{"q":{"jp":"<ruby>日本人<rt>にほんじん</rt></ruby>にとって<ruby>四季<rt>しき</rt></ruby>とは<ruby>何<rt>なに</rt></ruby>か。","plain":"にほんじんにとってしきとはなにか。","romaji":"nihonjin ni totte shiki to wa nani ka.","cn":"对日本人而言四季是什么？"},"a":{"jp":"<ruby>感性<rt>かんせい</rt></ruby>を<ruby>磨<rt>みが</rt></ruby>き、<ruby>言葉<rt>ことば</rt></ruby>を<ruby>豊<rt>ゆた</rt></ruby>かにする、<ruby>文化<rt>ぶんか</rt></ruby>の<ruby>根<rt>ね</rt></ruby>そのものである。","plain":"かんせいをみがき、ことばをゆたかにする、ぶんかのねそのものである。","romaji":"kansei o migaki, kotoba o yutaka ni suru, bunka no ne sono mono de aru.","cn":"是磨砺感性、丰富语言的文化之根本身。"}},{"q":{"jp":"<ruby>桜<rt>さくら</rt></ruby>の<ruby>美<rt>うつく</rt></ruby>しさの<ruby>本質<rt>ほんしつ</rt></ruby>は<ruby>何<rt>なに</rt></ruby>か。","plain":"さくらのうつくしさのほんしつはなにか。","romaji":"sakura no utsukushisa no honshitsu wa nani ka.","cn":"樱花美的本质是什么？"},"a":{"jp":"わずか<ruby>一週間<rt>いっしゅうかん</rt></ruby>ほどで<ruby>散<rt>ち</rt></ruby>ってしまう<ruby>儚<rt>はかな</rt></ruby>さこそが、<ruby>本質<rt>ほんしつ</rt></ruby>である。","plain":"わずかいっしゅうかんほどでちってしまうはかなさこそが、ほんしつである。","romaji":"wazuka isshuukan hodo de chitte shimau hakanasa koso ga, honshitsu de aru.","cn":"仅仅一周左右便会凋落的短暂本身，便是本质。"}},{"q":{"jp":"<ruby>茶道<rt>さどう</rt></ruby>の<ruby>四<rt>よっ</rt></ruby>つの<ruby>理念<rt>りねん</rt></ruby>とは<ruby>何<rt>なに</rt></ruby>か。","plain":"さどうのよっつのりねんとはなにか。","romaji":"sadou no yottsu no rinen to wa nani ka.","cn":"茶道的四个理念是什么？"},"a":{"jp":"<ruby>和<rt>わ</rt></ruby>・<ruby>敬<rt>けい</rt></ruby>・<ruby>清<rt>せい</rt></ruby>・<ruby>寂<rt>じゃく</rt></ruby>の<ruby>四<rt>よっ</rt></ruby>つである。","plain":"わ・けい・せい・じゃくのよっつである。","romaji":"wa, kei, sei, jaku no yottsu de aru.","cn":"和、敬、清、寂这四个。"}},{"q":{"jp":"「<ruby>一期一会<rt>いちごいちえ</rt></ruby>」とはどのような<ruby>意味<rt>いみ</rt></ruby>か。","plain":"「いちごいちえ」とはどのよういみか。","romaji":"\"ichigo-ichie\" to wa dono you na imi ka.","cn":"\"一期一会\"是什么意思？"},"a":{"jp":"<ruby>同<rt>おな</rt></ruby>じ<ruby>瞬間<rt>しゅんかん</rt></ruby>は<ruby>二度<rt>にど</rt></ruby>と<ruby>訪<rt>おとず</rt></ruby>れないので、<ruby>今<rt>いま</rt></ruby>この<ruby>瞬間<rt>しゅんかん</rt></ruby>を<ruby>大切<rt>たいせつ</rt></ruby>にすべきだという<ruby>意味<rt>いみ</rt></ruby>である。","plain":"おなじしゅんかんはにどとおとずれないので、いまこのしゅんかんをたいせつにすべきだといういみである。","romaji":"onaji shunkan wa nido to otozurenai node, ima kono shunkan o taisetsu ni subeki da to iu imi de aru.","cn":"相同的瞬间不会再次到来，因而应当珍惜眼前这一瞬。"}}],"vocabulary":[{"jp":"感性","kana":"かんせい","romaji":"kansei","meaning":"感性","pos":"名詞"},{"jp":"磨く","kana":"みがく","romaji":"migaku","meaning":"磨砺","pos":"動詞I"},{"jp":"根","kana":"ね","romaji":"ne","meaning":"根本","pos":"名詞"},{"jp":"満開","kana":"まんかい","romaji":"mankai","meaning":"满开","pos":"名詞"},{"jp":"散る","kana":"ちる","romaji":"chiru","meaning":"凋落","pos":"動詞I"},{"jp":"儚さ","kana":"はかなさ","romaji":"hakanasa","meaning":"短暂","pos":"名詞"},{"jp":"本質","kana":"ほんしつ","romaji":"honshitsu","meaning":"本质","pos":"名詞"},{"jp":"古来","kana":"こらい","romaji":"korai","meaning":"自古以来","pos":"副詞"},{"jp":"歌人","kana":"かじん","romaji":"kajin","meaning":"歌人","pos":"名詞"},{"jp":"無常","kana":"むじょう","romaji":"mujou","meaning":"无常","pos":"名詞"},{"jp":"蝉","kana":"せみ","romaji":"semi","meaning":"蝉","pos":"名詞"},{"jp":"森","kana":"もり","romaji":"mori","meaning":"森林","pos":"名詞"},{"jp":"満たす","kana":"みたす","romaji":"mitasu","meaning":"充盈","pos":"動詞I"},{"jp":"静寂","kana":"せいじゃく","romaji":"seijaku","meaning":"寂静","pos":"名詞"},{"jp":"逆説","kana":"ぎゃくせつ","romaji":"gyakusetsu","meaning":"悖论","pos":"名詞"},{"jp":"美意識","kana":"びいしき","romaji":"biishiki","meaning":"美学意识","pos":"名詞"},{"jp":"愛でる","kana":"めでる","romaji":"mederu","meaning":"欣赏","pos":"動詞II"},{"jp":"名月","kana":"めいげつ","romaji":"meigetsu","meaning":"名月","pos":"名詞"},{"jp":"詠む","kana":"よむ","romaji":"yomu","meaning":"吟咏","pos":"動詞I"},{"jp":"映る","kana":"うつる","romaji":"utsuru","meaning":"映照","pos":"動詞I"},{"jp":"欠ける","kana":"かける","romaji":"kakeru","meaning":"残缺","pos":"動詞II"},{"jp":"移ろい","kana":"うつろい","romaji":"utsuroi","meaning":"流转","pos":"名詞"},{"jp":"視点","kana":"してん","romaji":"shiten","meaning":"视点","pos":"名詞"},{"jp":"独自性","kana":"どくじせい","romaji":"dokujisei","meaning":"独特性","pos":"名詞"},{"jp":"吸い込む","kana":"すいこむ","romaji":"suikomu","meaning":"吸入","pos":"動詞I"},{"jp":"細やか","kana":"こまやか","romaji":"komayaka","meaning":"细腻","pos":"な形容詞"},{"jp":"よみがえる","kana":"よみがえる","romaji":"yomigaeru","meaning":"苏醒","pos":"動詞I"},{"jp":"気候変動","kana":"きこうへんどう","romaji":"kikou-hendou","meaning":"气候变化","pos":"名詞"},{"jp":"古典","kana":"こてん","romaji":"koten","meaning":"古典","pos":"名詞"},{"jp":"意義","kana":"いぎ","romaji":"igi","meaning":"意义","pos":"名詞"},{"jp":"器","kana":"うつわ","romaji":"utsuwa","meaning":"容器","pos":"名詞"},{"jp":"茶道","kana":"さどう","romaji":"sadou","meaning":"茶道","pos":"名詞"},{"jp":"理念","kana":"りねん","romaji":"rinen","meaning":"理念","pos":"名詞"},{"jp":"一期一会","kana":"いちごいちえ","romaji":"ichigo-ichie","meaning":"一期一会","pos":"慣用句"},{"jp":"所作","kana":"しょさ","romaji":"shosa","meaning":"动作","pos":"名詞"},{"jp":"美学","kana":"びがく","romaji":"bigaku","meaning":"美学","pos":"名詞"}],"grammar":[{"pattern":"〜にもかかわらず","name":"尽管...","explain":"表示\"尽管...还...\"，前后逆接。比「〜のに」语气更书面、更正式。前接动词普通形、形容词、名词均可。常用于评论、新闻报道，强调与预期相反的事实。","examples":[{"jp":"<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っているにもかかわらず、<ruby>試合<rt>しあい</rt></ruby>は<ruby>続<rt>つづ</rt></ruby>けられた。","plain":"あめがふっているにもかかわらず、しあいはつづけられた。","cn":"尽管在下雨，比赛仍继续进行。"}]},{"pattern":"〜こそ／〜からこそ","name":"正因为...才...","explain":"「〜こそ」单独使用强调\"正是...\"。「〜からこそ」表\"正因为...所以更...\"，比单纯的「〜から」语气强烈得多，强调因果关系的合理性、必然性。常用于反驳或加强语气。","examples":[{"jp":"<ruby>苦<rt>くる</rt></ruby>しいときだからこそ、<ruby>友人<rt>ゆうじん</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>さがわかる。","plain":"くるしいときだからこそ、ゆうじんのたいせつさがわかる。","cn":"正是痛苦的时候，才能明白友人的可贵。"}]},{"pattern":"〜わけだ","name":"难怪...／因此...","explain":"表示\"难怪...\"、\"也就是说...\"，用于根据已知信息得出合乎逻辑的结论。「〜わけではない」（并非...）和「〜わけにはいかない」（不能...）是常见变形。书面体常用「〜わけである」。","examples":[{"jp":"<ruby>長年<rt>ながねん</rt></ruby>の<ruby>努力<rt>どりょく</rt></ruby>があったから、<ruby>成功<rt>せいこう</rt></ruby>したわけだ。","plain":"ながねんのどりょくがあったから、せいこうしたわけだ。","cn":"正因有多年的努力，才会成功。"}]},{"pattern":"〜つつある","name":"正在逐渐...","explain":"表示\"正在逐渐...的过程中\"，强调缓慢的、持续的变化。比「〜ている」更书面，常用于描述社会、自然、状态的渐进变化。前接动词ます形词干。","examples":[{"jp":"<ruby>地球<rt>ちきゅう</rt></ruby>の<ruby>環境<rt>かんきょう</rt></ruby>は<ruby>悪化<rt>あっか</rt></ruby>しつつある。","plain":"ちきゅうのかんきょうはあっかしつつある。","cn":"地球的环境正在逐渐恶化。"}]},{"pattern":"〜以上","name":"既然...","explain":"表示\"既然...就...\", 前项是已成立的事实，后项是基于该事实的合理结论或义务。书面色彩强，比「〜からには」语感更正式。常出现在论说文中。","examples":[{"jp":"<ruby>約束<rt>やくそく</rt></ruby>した<ruby>以上<rt>いじょう</rt></ruby>、<ruby>必<rt>かなら</rt></ruby>ず<ruby>守<rt>まも</rt></ruby>らなければならない。","plain":"やくそくしたいじょう、かならずまもらなければならない。","cn":"既然约定了，就必须遵守。"}]}]},"prev":{"id":47,"title":"主観的判断"},"next":{"id":49,"title":"議論文の構造"}}</script>
+<script>
+(() => {
+  const data = JSON.parse(document.getElementById('lesson-data').textContent);
+  const lesson = data.lesson;
+  const prev = data.prev; // { id, title } | null
+  const next = data.next;
+
+  // Flatten "playable" sentences for the global play-all queue.
+  // group: 'main-N' / 'sub-N' / 'dialogue' (each has its own DOM nodes)
+  const playableGroups = []; // [{ groupId, items: [{ plain, el }] }]
+
+  // ---------- Masthead / nav ----------
+  const lessonNo = String(lesson.id).padStart(2, '0');
+  document.title = lesson.level + ' · 第' + lesson.id + '課 — ' + stripTags(lesson.title.jp);
+  document.getElementById('m-level').textContent = lesson.level + ' — Lesson ' + lessonNo;
+  document.getElementById('m-title-jp').innerHTML = lesson.title.jp;
+  document.getElementById('m-title-en').textContent = lesson.title.romaji + ' · ' + lesson.title.en;
+  document.getElementById('m-lesson-no').textContent = '第 ' + lesson.id + ' 課';
+  document.getElementById('footer-meta').textContent = '日本語 ' + lesson.level + ' · 第' + lesson.id + '課';
+
+  const navEl = document.getElementById('lesson-nav');
+  const navParts = [];
+  navParts.push('<a href="index.html">← 索引</a>');
+  navParts.push('<span>/</span>');
+  if (prev) {
+    navParts.push('<a href="lesson-' + String(prev.id).padStart(2, '0') + '.html">第' + prev.id + '課</a>');
+    navParts.push('<span>/</span>');
+  }
+  navParts.push('<span class="current">第' + lesson.id + '課</span>');
+  if (next) {
+    navParts.push('<span>/</span>');
+    navParts.push('<a href="lesson-' + String(next.id).padStart(2, '0') + '.html">第' + next.id + '課 →</a>');
+  }
+  navEl.innerHTML = navParts.join(' ');
+
+  // ---------- Goals ----------
+  const goalsList = document.getElementById('goals-list');
+  if (lesson.goals && lesson.goals.length) {
+    lesson.goals.forEach(g => {
+      const li = document.createElement('li');
+      li.textContent = g;
+      goalsList.appendChild(li);
+    });
+  } else {
+    document.getElementById('goals-block').hidden = true;
+  }
+
+  // ---------- Articles ----------
+  const articlesEl = document.getElementById('articles');
+  lesson.articles.forEach((article, ai) => {
+    const wrap = document.createElement('article');
+    wrap.className = 'article';
+    const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
+    wrap.id = 'article-' + groupId;
+
+    const meta = document.createElement('div');
+    meta.className = 'article-meta';
+    meta.textContent = article.kind === 'main' ? '主篇 · main reading' : '配篇 · companion reading';
+    wrap.appendChild(meta);
+
+    const h2 = document.createElement('h2');
+    h2.className = 'article-title';
+    h2.innerHTML = article.title.jp + '<span class="ja-small">' + escapeHtml(article.title.cn) + '</span>';
+    wrap.appendChild(h2);
+
+    const items = [];
+    article.sentences.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'sentence';
+      div.dataset.group = groupId;
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="jp-text">' + s.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(s.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(s.cn) + '</div>';
+      wrap.appendChild(div);
+      items.push({ plain: s.plain, el: div });
+    });
+
+    articlesEl.appendChild(wrap);
+    playableGroups.push({ groupId, items });
+  });
+
+  // ---------- Dialogue ----------
+  if (lesson.dialogue && lesson.dialogue.lines && lesson.dialogue.lines.length) {
+    document.getElementById('dialogue-divider').hidden = false;
+    document.getElementById('dialogue-block').hidden = false;
+    const sceneEl = document.getElementById('dialogue-scene');
+    sceneEl.textContent = lesson.dialogue.scene.jp + ' / ' + lesson.dialogue.scene.cn;
+    const linesEl = document.getElementById('dialogue-lines');
+    const items = [];
+    lesson.dialogue.lines.forEach((line, i) => {
+      const div = document.createElement('div');
+      div.className = 'dialogue-line';
+      div.dataset.group = 'dialogue';
+      div.dataset.index = String(i);
+      div.innerHTML =
+        '<div class="speaker">' + escapeHtml(line.speaker) + '</div>' +
+        '<div class="jp-text">' + line.jp + '</div>' +
+        '<div class="romaji">' + escapeHtml(line.romaji) + '</div>' +
+        '<div class="translation">' + escapeHtml(line.cn) + '</div>';
+      linesEl.appendChild(div);
+      items.push({ plain: line.plain, el: div });
+    });
+    playableGroups.push({ groupId: 'dialogue', items });
+  }
+
+  // ---------- Questions ----------
+  if (lesson.questions && lesson.questions.length) {
+    document.getElementById('questions-divider').hidden = false;
+    const qBlock = document.getElementById('questions-block');
+    qBlock.hidden = false;
+    lesson.questions.forEach((qa, i) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerHTML =
+        '<div class="question-q">' +
+          '<span class="q-mark">Q' + (i + 1) + '</span>' +
+          '<div class="jp-text">' + qa.q.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.q.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.q.cn) + '</div>' +
+        '</div>' +
+        '<div class="question-a">' +
+          '<span class="q-mark">A</span>' +
+          '<div class="jp-text">' + qa.a.jp + '</div>' +
+          '<div class="romaji">' + escapeHtml(qa.a.romaji) + '</div>' +
+          '<div class="translation">' + escapeHtml(qa.a.cn) + '</div>' +
+          (qa.hint ? '<div class="question-hint">提示：' + escapeHtml(qa.hint) + '</div>' : '') +
+        '</div>';
+      qBlock.appendChild(div);
+    });
+  }
+
+  // ---------- Vocabulary ----------
+  const vocabGrid = document.getElementById('vocab-grid');
+  lesson.vocabulary.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'vocab-item';
+    div.innerHTML =
+      '<div class="vocab-jp">' + escapeHtml(v.jp) + (v.pos ? '<span class="vocab-pos">' + escapeHtml(v.pos) + '</span>' : '') + '</div>' +
+      '<div class="vocab-kana">' + escapeHtml(v.kana) + '</div>' +
+      '<div class="vocab-romaji">' + escapeHtml(v.romaji) + '</div>' +
+      '<div class="vocab-meaning">' + escapeHtml(v.meaning) + '</div>';
+    vocabGrid.appendChild(div);
+  });
+
+  // ---------- Grammar ----------
+  const grammarNotes = document.getElementById('grammar-notes');
+  lesson.grammar.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'grammar-point';
+    let ex = '';
+    if (g.examples && g.examples.length) {
+      ex = '<div class="grammar-examples">' +
+        g.examples.map(e =>
+          '<div class="grammar-example">' +
+            '<div class="ex-jp">' + e.jp + '</div>' +
+            '<div class="ex-cn">' + escapeHtml(e.cn) + '</div>' +
+          '</div>'
+        ).join('') +
+        '</div>';
+    }
+    div.innerHTML =
+      '<div><span class="grammar-pattern">' + escapeHtml(g.pattern) + '</span>' +
+      '<span class="grammar-name">' + escapeHtml(g.name) + '</span></div>' +
+      '<div class="grammar-explain">' + escapeHtml(g.explain) + '</div>' +
+      ex;
+    grammarNotes.appendChild(div);
+  });
+
+  // ---------- Toggles ----------
+  document.querySelectorAll('.toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.toggle;
+      const state = btn.dataset.state;
+      document.querySelectorAll('.toggle[data-toggle="' + type + '"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (state === 'off') document.body.classList.add('hide-' + type);
+      else document.body.classList.remove('hide-' + type);
+    });
+  });
+
+  // ---------- Speech ----------
+  const synth = window.speechSynthesis;
+  let jaVoice = null;
+  const ttsStatus = document.getElementById('tts-status');
+  const nowReading = document.getElementById('now-reading');
+  const speedSelect = document.getElementById('speed-select');
+
+  function pickJapaneseVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    const preferred = voices.find(v => v.lang === 'ja-JP' && /Kyoko|Otoya|O-ren|Google/i.test(v.name));
+    jaVoice = preferred || voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) {
+      ttsStatus.textContent = '音声 · ' + jaVoice.name.split(' ')[0];
+      ttsStatus.classList.remove('unavailable');
+    } else {
+      ttsStatus.textContent = '音声 · 未対応';
+      ttsStatus.classList.add('unavailable');
+    }
+  }
+
+  if (synth) {
+    pickJapaneseVoice();
+    synth.onvoiceschanged = pickJapaneseVoice;
+  } else {
+    ttsStatus.textContent = '音声 · 未対応';
+    ttsStatus.classList.add('unavailable');
+  }
+
+  let queue = [];
+  let isPlaying = false;
+
+  function speak(text, onEnd) {
+    if (!synth) { onEnd && onEnd(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = parseFloat(speedSelect.value);
+    u.pitch = 1.0;
+    u.onend = () => onEnd && onEnd();
+    u.onerror = () => onEnd && onEnd();
+    synth.speak(u);
+  }
+
+  function clearPlaying() {
+    document.querySelectorAll('.sentence.playing, .dialogue-line.playing').forEach(s => s.classList.remove('playing'));
+  }
+
+  function findItem(groupId, index) {
+    const g = playableGroups.find(g => g.groupId === groupId);
+    return g ? g.items[index] : null;
+  }
+
+  function playItem(groupId, index) {
+    if (!synth) return;
+    synth.cancel();
+    clearPlaying();
+    const item = findItem(groupId, index);
+    if (!item) return;
+    item.el.classList.add('playing');
+    nowReading.textContent = item.plain;
+    speak(item.plain, () => {
+      item.el.classList.remove('playing');
+      if (queue.length > 0) {
+        const next = queue.shift();
+        playItem(next.group, next.index);
+      } else {
+        isPlaying = false;
+        nowReading.textContent = '完了 / done';
+      }
+    });
+  }
+
+  document.querySelectorAll('.sentence, .dialogue-line').forEach(el => {
+    el.addEventListener('click', () => {
+      queue = [];
+      isPlaying = true;
+      playItem(el.dataset.group, parseInt(el.dataset.index, 10));
+    });
+  });
+
+  document.getElementById('play-all').addEventListener('click', () => {
+    if (!synth) return;
+    if (isPlaying) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+      nowReading.textContent = '一時停止 / paused';
+      return;
+    }
+    queue = [];
+    playableGroups.forEach(g => {
+      g.items.forEach((_, i) => queue.push({ group: g.groupId, index: i }));
+    });
+    if (queue.length === 0) return;
+    isPlaying = true;
+    const first = queue.shift();
+    playItem(first.group, first.index);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && synth) {
+      synth.cancel();
+      queue = [];
+      isPlaying = false;
+      clearPlaying();
+    }
+  });
+
+  // ---------- helpers ----------
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function stripTags(s) { return String(s).replace(/<[^>]*>/g, ''); }
+})();
+</script>
+</body>
+</html>
