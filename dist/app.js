@@ -13,7 +13,64 @@
     progress: 'jp50.progress.v1',          // { completed: number[], current: number }
     display:  'jp50.display.v1',           // { furigana: bool, romaji: bool, translation: bool }
     speed:    'jp50.speed.v1',             // string
+    loop:     'jp50.loop.v1',              // string: '1','2','3','5','inf'
   };
+
+  // Estimated speech rate for Japanese TTS (kana per second at rate=1.0).
+  // Used by the elapsed-time fallback when SpeechSynthesisUtterance.boundary
+  // events don't fire (e.g. Firefox).
+  const ESTIMATED_KANA_PER_SECOND_AT_1X = 5.5;
+
+  // ---------- Karaoke annotation ------------------------------------------
+  // Wrap every "visual block" of a sentence's `jp` HTML in a span carrying
+  // its position inside the spoken `plain` text:
+  //   <ruby>K<rt>R</rt></ruby>   → one span owning R.length chars in plain
+  //   any standalone character    → one span owning 1 char in plain
+  // The renderer also exposes the span's [pStart, pStart+pLen) range so the
+  // TTS engine can highlight by SpeechSynthesisUtterance.charIndex.
+  function annotateJp(jp, plain) {
+    if (!jp) return '';
+    let pIdx = 0;
+    let i = 0;
+    let out = '';
+    const n = jp.length;
+    while (i < n) {
+      if (jp.startsWith('<ruby>', i)) {
+        const rtStart = jp.indexOf('<rt>', i);
+        const rtEnd = jp.indexOf('</rt>', rtStart);
+        const rubyEnd = jp.indexOf('</ruby>', rtEnd);
+        if (rtStart < 0 || rtEnd < 0 || rubyEnd < 0) {
+          // Malformed ruby — emit as a literal char and advance.
+          out += '<span class="kchar" data-ps="' + pIdx + '" data-pl="1">' + jp[i] + '</span>';
+          pIdx += 1;
+          i += 1;
+          continue;
+        }
+        const reading = jp.slice(rtStart + 4, rtEnd);
+        const pLen = reading.length;
+        const inner = jp.slice(i + 6, rubyEnd) // includes <rt>...</rt>
+          // keep ruby markup intact for furigana display
+          ;
+        out += '<span class="kchar" data-ps="' + pIdx + '" data-pl="' + pLen + '"><ruby>' + inner + '</ruby></span>';
+        pIdx += pLen;
+        i = rubyEnd + 7; // length of '</ruby>'
+      } else {
+        // Standalone character. Most punctuation / kana / katakana is 1 char
+        // in `plain` too. We do not split surrogate pairs because the dataset
+        // only uses BMP code points.
+        const ch = jp[i];
+        out += '<span class="kchar" data-ps="' + pIdx + '" data-pl="1">' + ch + '</span>';
+        pIdx += 1;
+        i += 1;
+      }
+    }
+    return out;
+  }
+
+  // For sentences without karaoke needs (questions, grammar examples), render
+  // the original ruby HTML untouched — `annotateJp` adds spans we don't need
+  // there.
+  function plainJp(jp) { return jp || ''; }
 
   // --- Progress store -------------------------------------------------------
   function getProgress() {
@@ -74,8 +131,16 @@
     let voice = null;
     let queue = [];
     let isPlaying = false;
-    let currentEl = null;
+    let currentItem = null;
     let nowReadingEl = null;
+    let allItems = [];          // canonical reference, used by repeat / range
+    let lastClickedItem = null; // for "Set A" / "Set B"
+    let abRange = null;         // { aIdx, bIdx } indexing into allItems
+    let pickingAB = null;       // 'A' | 'B' | null — gesture state
+    let totalRepeatsRemaining = 0; // mirrors loop count for current pass
+    let fallbackTimer = null;
+    let utteranceStartTs = 0;
+    let estimatedDurationMs = 0;
     const synth = window.speechSynthesis;
 
     function pickVoice() {
@@ -107,67 +172,275 @@
       try { localStorage.setItem(LS.speed, String(r)); } catch {}
     }
 
-    function clearHighlight() {
-      if (currentEl) currentEl.classList.remove('playing');
-      currentEl = null;
+    function getLoopCount() {
+      try {
+        const v = localStorage.getItem(LS.loop) || '1';
+        if (v === 'inf') return Infinity;
+        const n = parseInt(v, 10);
+        return n > 0 ? n : 1;
+      } catch { return 1; }
+    }
+    function setLoopCount(v) {
+      try { localStorage.setItem(LS.loop, String(v)); } catch {}
+      updateLoopUi();
     }
 
-    function speak(text, onEnd) {
+    // ---------- Karaoke highlighting ----------
+    function applyKaraoke(item, charIndex) {
+      if (!item || !item.spans) return;
+      for (const s of item.spans) {
+        const past = s.ps + s.pl <= charIndex;
+        const active = s.ps <= charIndex && charIndex < s.ps + s.pl;
+        s.el.classList.toggle('kc-past', past);
+        s.el.classList.toggle('kc-active', active);
+      }
+    }
+    function clearKaraoke(item) {
+      if (!item || !item.spans) return;
+      for (const s of item.spans) {
+        s.el.classList.remove('kc-past', 'kc-active');
+      }
+    }
+    function buildSpansFor(item) {
+      // Cache the per-span position once per item.
+      if (item.spans) return item.spans;
+      if (!item.el) { item.spans = []; return item.spans; }
+      const nodes = item.el.querySelectorAll('.kchar');
+      const spans = [];
+      nodes.forEach(el => {
+        const ps = parseInt(el.dataset.ps, 10);
+        const pl = parseInt(el.dataset.pl, 10);
+        if (Number.isFinite(ps) && Number.isFinite(pl)) {
+          spans.push({ el, ps, pl });
+        }
+      });
+      item.spans = spans;
+      return spans;
+    }
+
+    // ---------- Speak primitive ----------
+    function clearFallback() {
+      if (fallbackTimer) { clearInterval(fallbackTimer); fallbackTimer = null; }
+    }
+
+    function speak(item, onEnd) {
       if (!synth) { onEnd && onEnd(); return; }
+      const text = item.plain;
+      buildSpansFor(item);
+      // Reset karaoke state for the about-to-be-spoken item.
+      clearKaraoke(item);
+
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'ja-JP';
       if (voice) u.voice = voice;
-      u.rate = getRate(); u.pitch = 1.0;
-      u.onend = () => onEnd && onEnd();
-      u.onerror = () => onEnd && onEnd();
+      u.rate = getRate();
+      u.pitch = 1.0;
+
+      let gotBoundary = false;
+      utteranceStartTs = performance.now();
+      estimatedDurationMs = (text.length / ESTIMATED_KANA_PER_SECOND_AT_1X / Math.max(0.5, u.rate)) * 1000;
+
+      u.onboundary = (ev) => {
+        // Chrome/Safari fire 'word' boundary events with charIndex into `text`.
+        // Some browsers also fire 'sentence'. We accept all and trust charIndex.
+        const idx = typeof ev.charIndex === 'number' ? ev.charIndex : 0;
+        if (idx >= 0) gotBoundary = true;
+        applyKaraoke(item, idx);
+      };
+      u.onend = () => {
+        clearFallback();
+        // Mark every span past at end so the bar visually completes.
+        applyKaraoke(item, text.length + 1);
+        onEnd && onEnd();
+      };
+      u.onerror = () => { clearFallback(); onEnd && onEnd(); };
+
       synth.speak(u);
+
+      // Fallback timer: if no boundary event fires within the first 600ms
+      // (e.g. Firefox), simulate per-char advancement using elapsed time.
+      clearFallback();
+      fallbackTimer = setInterval(() => {
+        if (gotBoundary) { clearFallback(); return; }
+        const elapsed = performance.now() - utteranceStartTs;
+        if (elapsed < 200) return;
+        const idx = Math.min(text.length - 1, Math.floor((elapsed / estimatedDurationMs) * text.length));
+        applyKaraoke(item, idx);
+      }, 80);
     }
 
     function attachReadout(el) { nowReadingEl = el; }
 
-    function playOne(item) {
-      if (!synth) return;
+    // ---------- Item picker / queue / loop logic ----------
+    function setAllItems(items) {
+      allItems = items.slice();
+      lastClickedItem = null;
+      abRange = null;
+      pickingAB = null;
+      updateLoopUi();
+    }
+    function rememberClicked(item) { lastClickedItem = item; }
+
+    function indexOfItem(item) { return allItems.indexOf(item); }
+
+    function playOne(item, onComplete) {
       synth.cancel();
-      clearHighlight();
-      currentEl = item.el;
-      if (currentEl) currentEl.classList.add('playing');
-      if (nowReadingEl) nowReadingEl.textContent = item.plain;
-      speak(item.plain, () => {
-        if (currentEl) currentEl.classList.remove('playing');
-        currentEl = null;
-        if (queue.length > 0) {
-          const next = queue.shift();
-          playOne(next);
-        } else {
-          isPlaying = false;
-          if (nowReadingEl) nowReadingEl.textContent = '完了 / done';
-          updatePlayBtn();
-        }
+      clearAllPlaying();
+      currentItem = item;
+      if (currentItem.el) currentItem.el.classList.add('playing');
+      if (nowReadingEl) nowReadingEl.textContent = currentItem.plain;
+      speak(item, () => {
+        if (currentItem && currentItem.el) currentItem.el.classList.remove('playing');
+        clearKaraoke(currentItem);
+        currentItem = null;
+        onComplete && onComplete();
       });
     }
 
-    function playSingle(item) {
+    function clearAllPlaying() {
+      document.querySelectorAll('.sentence.playing, .dialogue-line.playing').forEach(s => s.classList.remove('playing'));
+    }
+
+    function stop(reason) {
+      if (synth) synth.cancel();
+      clearFallback();
+      if (currentItem) {
+        if (currentItem.el) currentItem.el.classList.remove('playing');
+        clearKaraoke(currentItem);
+      }
+      currentItem = null;
       queue = [];
-      isPlaying = true;
-      playOne(item);
+      isPlaying = false;
+      totalRepeatsRemaining = 0;
+      if (nowReadingEl && reason) nowReadingEl.textContent = reason;
       updatePlayBtn();
     }
 
-    function playAll(items) {
+    // Single sentence with N-time loop
+    function playSingle(item) {
       if (!synth) return;
-      if (isPlaying) {
-        synth.cancel(); queue = []; isPlaying = false;
-        clearHighlight();
-        if (nowReadingEl) nowReadingEl.textContent = '一時停止 / paused';
-        updatePlayBtn();
+      // If gesture is "set A/B", consume the click instead of playing.
+      if (pickingAB === 'A') {
+        abRange = { aIdx: indexOfItem(item), bIdx: abRange ? abRange.bIdx : -1 };
+        pickingAB = abRange.bIdx < 0 ? 'B' : null;
+        rememberClicked(item);
+        flashAB(item, 'A');
+        updateLoopUi();
         return;
       }
-      queue = items.slice();
-      if (queue.length === 0) return;
+      if (pickingAB === 'B') {
+        if (!abRange) abRange = { aIdx: -1, bIdx: -1 };
+        abRange.bIdx = indexOfItem(item);
+        pickingAB = null;
+        rememberClicked(item);
+        flashAB(item, 'B');
+        updateLoopUi();
+        return;
+      }
+      rememberClicked(item);
+      const count = getLoopCount();
+      totalRepeatsRemaining = (count === Infinity) ? Infinity : Math.max(1, count);
       isPlaying = true;
-      const first = queue.shift();
-      playOne(first);
       updatePlayBtn();
+      const playNext = () => {
+        if (totalRepeatsRemaining === 0) { isPlaying = false; updatePlayBtn(); if (nowReadingEl) nowReadingEl.textContent = '完了 / done'; return; }
+        if (totalRepeatsRemaining !== Infinity) totalRepeatsRemaining -= 1;
+        playOne(item, playNext);
+      };
+      playNext();
+    }
+
+    // Play All — runs through allItems; loopCount applies to the whole pass
+    function playAll() {
+      if (!synth || allItems.length === 0) return;
+      if (isPlaying) { stop('一時停止 / paused'); return; }
+      const count = getLoopCount();
+      totalRepeatsRemaining = (count === Infinity) ? Infinity : Math.max(1, count);
+      isPlaying = true;
+      updatePlayBtn();
+      runPass();
+    }
+
+    function runPass() {
+      if (totalRepeatsRemaining !== Infinity) totalRepeatsRemaining -= 1;
+      queue = allItems.slice();
+      stepQueue();
+    }
+
+    function stepQueue() {
+      const next = queue.shift();
+      if (!next) {
+        // Pass complete. Loop?
+        if (totalRepeatsRemaining > 0 || totalRepeatsRemaining === Infinity) {
+          runPass();
+        } else {
+          stop('完了 / done');
+        }
+        return;
+      }
+      playOne(next, stepQueue);
+    }
+
+    // A-B range loop — independent flow
+    function playAB() {
+      if (!synth) return;
+      if (!abRange || abRange.aIdx < 0 || abRange.bIdx < 0) return;
+      if (isPlaying) { stop('一時停止 / paused'); return; }
+      let lo = Math.min(abRange.aIdx, abRange.bIdx);
+      let hi = Math.max(abRange.aIdx, abRange.bIdx);
+      const slice = allItems.slice(lo, hi + 1);
+      const count = getLoopCount();
+      // For AB we treat default count of 1 as "loop indefinitely" — that's
+      // the natural intent of A-B repeat. Honor explicit user choice otherwise.
+      totalRepeatsRemaining = (count === 1 || count === Infinity) ? Infinity : count;
+      isPlaying = true;
+      updatePlayBtn();
+      const runOnce = () => {
+        if (totalRepeatsRemaining !== Infinity) totalRepeatsRemaining -= 1;
+        queue = slice.slice();
+        stepQueue();
+      };
+      // Patch stepQueue to repeat slice instead of allItems for AB.
+      // We achieve that by overwriting allItems-aware behaviour:
+      // Use a local stepper that defers to slice instead.
+      let i = 0;
+      const stepLocal = () => {
+        if (!isPlaying) return;
+        if (i >= slice.length) {
+          if (totalRepeatsRemaining > 0 || totalRepeatsRemaining === Infinity) {
+            if (totalRepeatsRemaining !== Infinity) totalRepeatsRemaining -= 1;
+            i = 0;
+          } else {
+            stop('完了 / done');
+            return;
+          }
+        }
+        const it = slice[i++];
+        playOne(it, stepLocal);
+      };
+      stepLocal();
+    }
+
+    function startPickingAB(which) {
+      pickingAB = which;
+      updateLoopUi();
+    }
+    function clearAB() {
+      abRange = null;
+      pickingAB = null;
+      document.querySelectorAll('.sentence, .dialogue-line').forEach(el => {
+        el.classList.remove('ab-a', 'ab-b');
+      });
+      updateLoopUi();
+    }
+
+    function flashAB(item, which) {
+      if (!item || !item.el) return;
+      // Remove the marker from any other element holding this letter
+      document.querySelectorAll('.ab-' + which.toLowerCase()).forEach(el => {
+        if (el !== item.el) el.classList.remove('ab-' + which.toLowerCase());
+      });
+      item.el.classList.add('ab-' + which.toLowerCase());
     }
 
     function updatePlayBtn() {
@@ -178,18 +451,61 @@
         : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
     }
 
+    function updateLoopUi() {
+      const sel = document.getElementById('loop-select');
+      if (sel) {
+        const cur = (() => { try { return localStorage.getItem(LS.loop) || '1'; } catch { return '1'; } })();
+        sel.value = cur;
+      }
+      const aPill = document.getElementById('ab-a-pill');
+      const bPill = document.getElementById('ab-b-pill');
+      const playAbBtn = document.getElementById('ab-play');
+      const clearBtn = document.getElementById('ab-clear');
+      if (aPill) {
+        const txt = abRange && abRange.aIdx >= 0 ? ('A: ' + (abRange.aIdx + 1)) : (pickingAB === 'A' ? 'A: 选…' : 'A: —');
+        aPill.textContent = txt;
+        aPill.classList.toggle('on', !!(abRange && abRange.aIdx >= 0));
+        aPill.classList.toggle('picking', pickingAB === 'A');
+      }
+      if (bPill) {
+        const txt = abRange && abRange.bIdx >= 0 ? ('B: ' + (abRange.bIdx + 1)) : (pickingAB === 'B' ? 'B: 选…' : 'B: —');
+        bPill.textContent = txt;
+        bPill.classList.toggle('on', !!(abRange && abRange.bIdx >= 0));
+        bPill.classList.toggle('picking', pickingAB === 'B');
+      }
+      const haveBoth = !!(abRange && abRange.aIdx >= 0 && abRange.bIdx >= 0);
+      if (playAbBtn) {
+        playAbBtn.disabled = !haveBoth;
+        playAbBtn.classList.toggle('disabled', !haveBoth);
+      }
+      if (clearBtn) {
+        clearBtn.style.display = (abRange && (abRange.aIdx >= 0 || abRange.bIdx >= 0)) ? '' : 'none';
+      }
+    }
+
     function reset() {
-      if (synth) synth.cancel();
-      queue = []; isPlaying = false;
-      clearHighlight();
+      stop();
       nowReadingEl = null;
+      allItems = [];
+      abRange = null;
+      pickingAB = null;
+      lastClickedItem = null;
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) reset();
+      if (document.hidden) stop();
     });
 
-    return { playSingle, playAll, attachReadout, reset, getRate, setRate, isAvailable: () => !!synth };
+    return {
+      attachReadout, setAllItems, rememberClicked,
+      playSingle, playAll, playAB,
+      reset, stop,
+      getRate, setRate,
+      getLoopCount, setLoopCount,
+      startPickingAB, clearAB,
+      updateLoopUi,
+      isAvailable: () => !!synth,
+    };
   })();
 
   // --- Top nav --------------------------------------------------------------
@@ -542,7 +858,7 @@
       const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
       const sentences = (article.sentences || []).map((s, si) =>
         `<div class="sentence" data-group="${groupId}" data-index="${si}">
-          <div class="jp-text">${s.jp}</div>
+          <div class="jp-text">${annotateJp(s.jp, s.plain)}</div>
           <div class="romaji">${escapeHtml(s.romaji)}</div>
           <div class="translation">${escapeHtml(s.cn)}</div>
         </div>`
@@ -560,7 +876,7 @@
       const lines = lesson.dialogue.lines.map((line, i) =>
         `<div class="dialogue-line" data-group="dialogue" data-index="${i}">
           <div class="speaker">${escapeHtml(line.speaker)}</div>
-          <div class="jp-text">${line.jp}</div>
+          <div class="jp-text">${annotateJp(line.jp, line.plain)}</div>
           <div class="romaji">${escapeHtml(line.romaji)}</div>
           <div class="translation">${escapeHtml(line.cn)}</div>
         </div>`
@@ -697,17 +1013,31 @@
       </aside>
 
       <div class="audio-rail">
-        <button class="play" id="audio-play">
+        <button class="play" id="audio-play" title="Play All / Pause">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
         </button>
         <div class="audio-rail-info">
-          <div>
+          <div class="audio-now-block">
             <div class="audio-now-label">Now reading</div>
             <div class="audio-now-text" id="audio-now-text">クリックで再生 / Click sentence to play</div>
           </div>
         </div>
         <div class="audio-actions">
-          <select id="speed-select">
+          <button class="pill ab-pill" id="ab-a-pill" title="設 A — 区間ループの始点">A: —</button>
+          <button class="pill ab-pill" id="ab-b-pill" title="設 B — 区間ループの終点">B: —</button>
+          <button class="pill" id="ab-play" title="A→B を繰り返す" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span>A↔B</span>
+          </button>
+          <button class="pill ab-clear" id="ab-clear" title="A/B 解除" style="display:none">×</button>
+          <select id="loop-select" title="Loop count">
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+            <option value="3">3×</option>
+            <option value="5">5×</option>
+            <option value="inf">∞</option>
+          </select>
+          <select id="speed-select" title="Speed">
             <option value="0.7">0.7×</option>
             <option value="0.85">0.85×</option>
             <option value="1.0">1.0×</option>
@@ -722,12 +1052,12 @@
     applyDisplayPrefs(getDisplayPrefs());
     TTS.attachReadout(document.getElementById('audio-now-text'));
 
-    // Build playable items per group, in DOM order
+    // Build playable items per group, in DOM order.
+    // `el` = the .sentence or .dialogue-line container (has .kchar spans inside)
     const playables = [];
     document.querySelectorAll('.reader-main .sentence, .reader-main .dialogue-line').forEach(el => {
       const group = el.dataset.group;
       const index = parseInt(el.dataset.index, 10);
-      // resolve plain from data
       let plain = '';
       if (group === 'dialogue') {
         plain = lesson.dialogue?.lines?.[index]?.plain || '';
@@ -743,7 +1073,23 @@
       playables.push(item);
     });
 
-    document.getElementById('audio-play')?.addEventListener('click', () => TTS.playAll(playables));
+    TTS.setAllItems(playables);
+
+    document.getElementById('audio-play')?.addEventListener('click', () => TTS.playAll());
+
+    // Loop count select
+    const loopSel = document.getElementById('loop-select');
+    if (loopSel) {
+      loopSel.addEventListener('change', () => TTS.setLoopCount(loopSel.value));
+    }
+
+    // A/B controls
+    document.getElementById('ab-a-pill')?.addEventListener('click', () => TTS.startPickingAB('A'));
+    document.getElementById('ab-b-pill')?.addEventListener('click', () => TTS.startPickingAB('B'));
+    document.getElementById('ab-play')?.addEventListener('click', () => TTS.playAB());
+    document.getElementById('ab-clear')?.addEventListener('click', () => TTS.clearAB());
+
+    TTS.updateLoopUi();
 
     // Display prefs toggles
     document.querySelectorAll('.ctx-toggles .toggle').forEach(btn => {

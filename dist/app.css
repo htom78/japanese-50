@@ -563,6 +563,52 @@ body.hide-romaji .romaji { display: none; }
 }
 body.hide-translation .translation { display: none; }
 
+/* ---- Karaoke per-character highlight (TTS-driven) -------- */
+.kchar {
+  /* Each visible block (one ruby cluster or one standalone char). */
+  position: relative;
+  transition: color 200ms var(--ease), background 220ms var(--ease);
+}
+.kchar.kc-past {
+  color: var(--ink-3);
+}
+.kchar.kc-active {
+  color: var(--vermillion);
+  background: linear-gradient(transparent 70%, rgba(184, 85, 63, 0.22) 70%);
+}
+/* When the active class lands on a <ruby>, also tint its rt for cohesion. */
+.kchar.kc-active rt { color: var(--vermillion); opacity: 0.85; }
+.kchar.kc-past rt { opacity: 0.55; }
+
+/* ---- A / B markers on the line itself ------------------- */
+.sentence.ab-a, .dialogue-line.ab-a {
+  box-shadow: -3px 0 0 var(--vermillion) inset;
+}
+.sentence.ab-b, .dialogue-line.ab-b {
+  box-shadow: 3px 0 0 var(--indigo) inset;
+}
+.sentence.ab-a.ab-b, .dialogue-line.ab-a.ab-b {
+  box-shadow: -3px 0 0 var(--vermillion) inset, 3px 0 0 var(--indigo) inset;
+}
+.sentence.ab-a::after, .dialogue-line.ab-a::after,
+.sentence.ab-b::after, .dialogue-line.ab-b::after {
+  content: 'A';
+  position: absolute;
+  top: 4px; right: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--vermillion);
+  opacity: 0.7;
+}
+.sentence.ab-b::after, .dialogue-line.ab-b::after {
+  content: 'B';
+  color: var(--indigo);
+}
+.sentence.ab-a.ab-b::after, .dialogue-line.ab-a.ab-b::after {
+  content: 'AB';
+}
+
 /* Dialogue */
 .dialogue-scene {
   font-size: 12px; color: var(--ink-3); font-style: italic;
@@ -680,6 +726,47 @@ body.hide-translation .translation { display: none; }
   border: 0; border-radius: 999px;
   padding: 5px 10px;
   font-family: var(--font-mono); font-size: 11px;
+}
+
+/* AB control pills inside audio-rail */
+.audio-actions .ab-pill {
+  border: 1px solid rgba(247,244,238,0.18);
+  background: transparent;
+  min-width: 48px;
+}
+.audio-actions .ab-pill.on {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+  background: rgba(184, 85, 63, 0.12);
+}
+#ab-b-pill.on { border-color: var(--indigo); color: #9DB7C7; background: rgba(44,95,127,0.18); }
+.audio-actions .ab-pill.picking {
+  border-color: var(--bg);
+  color: var(--bg);
+  animation: ab-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ab-pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.55 } }
+
+.audio-actions #ab-play {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid rgba(247,244,238,0.18);
+  background: transparent;
+  color: var(--bg);
+}
+.audio-actions #ab-play:not(.disabled):not([disabled]):hover {
+  background: rgba(247,244,238,0.12);
+}
+.audio-actions #ab-play.disabled,
+.audio-actions #ab-play[disabled] {
+  opacity: 0.32; cursor: not-allowed;
+}
+.audio-actions #ab-clear {
+  border: 1px solid rgba(247,244,238,0.18);
+  background: transparent;
+  width: 26px; height: 26px;
+  padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px;
 }
 
 /* Right context rail */
