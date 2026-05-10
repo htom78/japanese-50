@@ -246,6 +246,68 @@
     return out.map(x => x.e);
   }
 
+  // --- Vocabulary index for click-to-define popover -------------------------
+  // Maps every distinct vocabulary `jp` form (e.g. "毎朝", "起きます") to a
+  // list of all lessons it occurs in, with full metadata. Lazy-built on
+  // first popover request, then memoised. Pure data; no UI side effects.
+  let _vocabIndex = null;
+  function buildVocabIndex() {
+    if (_vocabIndex) return _vocabIndex;
+    const map = new Map();
+    for (const l of LESSONS) {
+      (l.vocabulary || []).forEach((v, vi) => {
+        const key = v.jp;
+        if (!key) return;
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push({
+          lessonId: l.id,
+          level: l.level,
+          lessonTitle: stripTags(l.title.jp),
+          kana: v.kana,
+          romaji: v.romaji,
+          meaning: v.meaning,
+          pos: v.pos || '',
+          vi,
+        });
+      });
+    }
+    _vocabIndex = map;
+    return map;
+  }
+  function lookupVocab(jp) { return buildVocabIndex().get(jp) || []; }
+
+  // Count how many lessons contain this word in their sentences / dialogue /
+  // grammar examples (i.e. live-text occurrences beyond the curated vocab list).
+  // Returns: { lessons: Set<lessonId>, total: number }
+  let _contentOccCache = null;
+  function countContentOccurrences(jp) {
+    if (!jp) return { lessonIds: new Set(), total: 0 };
+    if (!_contentOccCache) _contentOccCache = new Map();
+    if (_contentOccCache.has(jp)) return _contentOccCache.get(jp);
+    const lessonIds = new Set();
+    let total = 0;
+    for (const l of LESSONS) {
+      let hit = false;
+      for (const article of (l.articles || [])) {
+        for (const s of (article.sentences || [])) {
+          if (stripTags(s.jp).includes(jp)) { hit = true; total++; }
+        }
+      }
+      for (const line of ((l.dialogue && l.dialogue.lines) || [])) {
+        if (stripTags(line.jp).includes(jp)) { hit = true; total++; }
+      }
+      for (const g of (l.grammar || [])) {
+        for (const e of (g.examples || [])) {
+          if (stripTags(e.jp).includes(jp)) { hit = true; total++; }
+        }
+      }
+      if (hit) lessonIds.add(l.id);
+    }
+    const result = { lessonIds, total };
+    _contentOccCache.set(jp, result);
+    return result;
+  }
+
   function highlightMatch(haystackOriginal, query) {
     const q = query.trim();
     if (!q) return escapeHtml(haystackOriginal);
@@ -1768,6 +1830,153 @@
     });
   }
 
+  // --- Word popover (click-to-define) --------------------------------------
+  // Click any kanji cluster (a `.kchar` containing a <ruby>) inside a sentence
+  // in the lesson reader → an anchored popover shows its reading + meaning +
+  // every other lesson it appears in. Bridges the project's spiral-curriculum
+  // promise into something the reader can feel while reading.
+  function ensurePopoverRoot() {
+    let root = document.getElementById('wpop');
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = 'wpop';
+    root.className = 'wpop hidden';
+    root.setAttribute('role', 'dialog');
+    document.body.appendChild(root);
+    // Click outside closes (capture phase so we beat the row click handler).
+    document.addEventListener('mousedown', (e) => {
+      if (root.classList.contains('hidden')) return;
+      if (e.target instanceof Node && root.contains(e.target)) return;
+      // Allow another `.kchar` click to immediately re-open with new content.
+      closeWordPopover();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !root.classList.contains('hidden')) closeWordPopover();
+    });
+    window.addEventListener('hashchange', closeWordPopover);
+    window.addEventListener('resize', closeWordPopover);
+    window.addEventListener('scroll', closeWordPopover, { passive: true });
+    return root;
+  }
+  function closeWordPopover() {
+    const root = document.getElementById('wpop');
+    if (root) root.classList.add('hidden');
+  }
+
+  function openWordPopover(anchorEl, jpText) {
+    const root = ensurePopoverRoot();
+    const occurrences = lookupVocab(jpText);
+
+    // Decide primary metadata: prefer the entry from the lesson the user is
+    // currently reading; fall back to the earliest occurrence.
+    const params = parseHashQuery();
+    const currentLessonId = (() => {
+      const m = (location.hash || '').match(/^#\/lesson\/(\d+)/);
+      return m ? parseInt(m[1], 10) : null;
+    })();
+    const primary = occurrences.find(o => o.lessonId === currentLessonId)
+                 || occurrences[0]
+                 || null;
+
+    const headHtml = primary
+      ? `<div class="wpop-head">
+          <div class="wpop-jp">${escapeHtml(jpText)}</div>
+          <div class="wpop-reading">${escapeHtml(primary.kana)} · <span class="wpop-romaji">${escapeHtml(primary.romaji)}</span></div>
+          <div class="wpop-mean">${escapeHtml(primary.meaning)}${primary.pos ? `<span class="wpop-pos">${escapeHtml(primary.pos)}</span>` : ''}</div>
+        </div>`
+      : `<div class="wpop-head">
+          <div class="wpop-jp">${escapeHtml(jpText)}</div>
+          <div class="wpop-empty">語彙索引に未登録 — 全コンテンツで検索してみる</div>
+        </div>`;
+
+    const otherLessons = occurrences.filter(o => o.lessonId !== currentLessonId);
+
+    // Cross-content occurrences (sentences/dialogue/examples). Excludes the
+    // current lesson so the count means "elsewhere in the book".
+    const contentOcc = countContentOccurrences(jpText);
+    const otherContentLessons = Array.from(contentOcc.lessonIds).filter(id => id !== currentLessonId);
+    const otherContentLessonObjs = otherContentLessons
+      .map(id => LESSONS.find(l => l.id === id))
+      .filter(Boolean)
+      .map(l => ({ lessonId: l.id, level: l.level, lessonTitle: stripTags(l.title.jp) }));
+
+    // Merge vocab-listed lessons and content-occurrence lessons, dedupe by id.
+    const seenIds = new Set();
+    const mergedRows = [];
+    for (const o of otherLessons) { if (!seenIds.has(o.lessonId)) { seenIds.add(o.lessonId); mergedRows.push({ ...o, source: 'vocab' }); } }
+    for (const o of otherContentLessonObjs) { if (!seenIds.has(o.lessonId)) { seenIds.add(o.lessonId); mergedRows.push({ ...o, source: 'content' }); } }
+    mergedRows.sort((a, b) => a.lessonId - b.lessonId);
+
+    const occHtml = mergedRows.length
+      ? `<div class="wpop-occ">
+          <div class="wpop-occ-label">他 ${mergedRows.length} 課で出現</div>
+          ${mergedRows.slice(0, 6).map(o =>
+            `<a class="wpop-occ-row" href="#/lesson/${o.lessonId}${o.source === 'vocab' && o.vi != null ? '?focus=vocab-' + o.vi : '?focus=jp&q=' + encodeURIComponent(jpText)}">
+              <span class="wpop-occ-l">L${pad2(o.lessonId)} · ${o.level}</span>
+              <span class="wpop-occ-t">${escapeHtml(o.lessonTitle)}</span>
+            </a>`).join('')}
+          ${mergedRows.length > 6 ? `<div class="wpop-occ-overflow">+ ${mergedRows.length - 6} more · use 検索</div>` : ''}
+        </div>`
+      : '';
+
+    const ctaHtml = `<div class="wpop-foot">
+      <a class="wpop-search" href="#/search?q=${encodeURIComponent(jpText)}">全コンテンツで検索 →</a>
+    </div>`;
+
+    root.innerHTML = headHtml + occHtml + ctaHtml;
+
+    // Position the popover near the click. Append-then-measure so we know its
+    // own size; then clamp to viewport with 12px margins.
+    root.classList.remove('hidden');
+    const margin = 12;
+    const a = anchorEl.getBoundingClientRect();
+    const r = root.getBoundingClientRect();
+    let left = a.left + a.width / 2 - r.width / 2;
+    let top = a.bottom + 10;
+    // Flip to above the anchor when there isn't room below.
+    if (top + r.height + margin > window.innerHeight) {
+      top = a.top - r.height - 10;
+    }
+    left = Math.max(margin, Math.min(left, window.innerWidth - r.width - margin));
+    top = Math.max(margin, top);
+    root.style.left = left + 'px';
+    root.style.top = top + 'px';
+
+    // Re-bind anchored row clicks: the auto-close handler runs on mousedown,
+    // so a normal <a> click navigation needs to land first → use direct
+    // navigation in click handler so we get the new page even after close.
+    root.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => closeWordPopover());
+    });
+  }
+
+  // Click delegation — clicking a kanji cluster (.kchar with <ruby>) inside
+  // a sentence opens the word popover. Any other click on the sentence is
+  // left to the existing TTS handler. Capture-phase so we can stop propagation
+  // before the sentence-level click fires.
+  function wireWordClickDelegation() {
+    document.addEventListener('click', (e) => {
+      const t = e.target instanceof HTMLElement ? e.target : null;
+      if (!t) return;
+      const kchar = t.closest('.kchar');
+      if (!kchar) return;
+      const sentence = kchar.closest('.sentence, .dialogue-line');
+      if (!sentence) return;
+      // Only intercept when the kchar is a kanji cluster (it has a <ruby>).
+      // Standalone kana / punctuation kchars fall through to TTS as before.
+      const ruby = kchar.querySelector('ruby');
+      if (!ruby) return;
+      e.stopPropagation();
+      e.preventDefault();
+      // Resolve the displayed kanji text (= ruby content minus rt readings).
+      const clone = ruby.cloneNode(true);
+      clone.querySelectorAll('rt').forEach(rt => rt.remove());
+      const jp = clone.textContent.trim();
+      if (!jp) return;
+      openWordPopover(kchar, jp);
+    }, true);
+  }
+
   function wireOfflineIndicator() {
     const update = () => {
       const pill = document.getElementById('tts-status');
@@ -1794,6 +2003,7 @@
     navigate();
     wireOfflineIndicator();
     wirePaletteHotkeys();
+    wireWordClickDelegation();
     registerServiceWorker();
   });
   window.addEventListener('hashchange', () => { closePalette(); navigate(); });

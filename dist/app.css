@@ -1173,6 +1173,96 @@ body.hide-translation .translation { display: none; }
 .cmdk-foot kbd { padding: 1px 5px; border: 1px solid var(--line); border-radius: 3px; }
 .cmdk-foot a { color: var(--vermillion); text-decoration: none; border-bottom: 1px solid var(--vermillion); padding-bottom: 1px; }
 
+/* ============================================================
+   Word popover — click a kanji cluster while reading
+   ============================================================ */
+.kchar:has(ruby) {
+  cursor: help;
+}
+.kchar:has(ruby):hover {
+  background: rgba(44, 95, 127, 0.06);
+  border-radius: 3px;
+}
+
+.wpop {
+  position: fixed; z-index: 150;
+  width: min(320px, calc(100vw - 24px));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lift);
+  font-family: var(--font-body-jp);
+  animation: wpop-in 180ms var(--ease);
+}
+.wpop.hidden { display: none; }
+@keyframes wpop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.wpop-head {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.wpop-jp {
+  font-family: var(--font-display-jp); font-size: 22px;
+  font-weight: 500; line-height: 1.2; color: var(--ink);
+}
+.wpop-reading {
+  font-family: var(--font-body-jp); font-size: 12px;
+  color: var(--ink-3); margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+.wpop-romaji { font-family: var(--font-mono); font-size: 11px; }
+.wpop-mean {
+  font-family: var(--font-body-jp); font-size: 13px;
+  color: var(--ink); margin-top: 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.wpop-pos {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: 0.1em;
+  border: 1px solid var(--line); padding: 2px 6px; border-radius: 999px;
+  flex-shrink: 0;
+}
+.wpop-empty {
+  font-family: var(--font-body-jp); font-size: 12px;
+  color: var(--ink-3); margin-top: 6px; line-height: 1.5;
+}
+
+.wpop-occ {
+  padding: 10px 12px 6px;
+  border-bottom: 1px solid var(--line);
+  max-height: 200px; overflow-y: auto;
+}
+.wpop-occ-label {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--ink-3); letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 6px; padding: 0 4px;
+}
+.wpop-occ-row {
+  display: grid; grid-template-columns: 64px 1fr; gap: 10px;
+  padding: 5px 4px;
+  text-decoration: none; color: inherit;
+  border-radius: 6px;
+  transition: background 150ms;
+}
+.wpop-occ-row:hover { background: var(--bg-tint); }
+.wpop-occ-l { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.1em; align-self: center; }
+.wpop-occ-t { font-family: var(--font-display-jp); font-size: 13px; color: var(--ink); align-self: center; }
+.wpop-occ-overflow { font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); padding: 4px; }
+
+.wpop-foot {
+  padding: 10px 14px;
+  display: flex; justify-content: flex-end;
+}
+.wpop-search {
+  font-family: var(--font-display-en); font-size: 12px;
+  color: var(--vermillion); text-decoration: none;
+  border-bottom: 1px solid var(--vermillion);
+  padding-bottom: 1px;
+}
+
 /* Focus flash for in-lesson anchor jumps */
 .focus-flash {
   animation: focus-flash 2200ms ease-out;
