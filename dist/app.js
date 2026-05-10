@@ -126,6 +126,137 @@
   function lessonsByLevel(level) { return LESSONS.filter(l => l.level === level); }
   function lessonById(id) { return LESSONS.find(l => l.id === id); }
 
+  // --- Search index ---------------------------------------------------------
+  // Built lazily on first query, then memoised. ~thousands of entries on the
+  // 50-lesson dataset — well within sub-millisecond linear scan budget.
+  // Each entry: { kind, lessonId, title, hay, jp, label, anchor }
+  //   kind:    'lesson' | 'vocab' | 'grammar' | 'sentence' | 'dialogue' | 'question'
+  //   hay:     lowercased haystack used for matching (jp+kana+romaji+meaning…)
+  //   jp:      display string in Japanese
+  //   label:   secondary line shown in the result row
+  //   anchor:  optional in-lesson anchor id (e.g. 'vocab-3' / 'grammar-1' / 'sent-main-0-2')
+  let _searchIndex = null;
+  function buildSearchIndex() {
+    if (_searchIndex) return _searchIndex;
+    const idx = [];
+    for (const l of LESSONS) {
+      const lessonTitleJp = stripTags(l.title.jp);
+      // 1. Lesson card
+      idx.push({
+        kind: 'lesson',
+        lessonId: l.id, level: l.level,
+        title: lessonTitleJp,
+        jp: lessonTitleJp,
+        label: l.level + ' · 第' + l.id + '課 · ' + l.title.cn,
+        hay: (lessonTitleJp + ' ' + l.title.romaji + ' ' + l.title.cn + ' ' + l.title.en).toLowerCase(),
+      });
+      // 2. Vocabulary
+      (l.vocabulary || []).forEach((v, vi) => {
+        idx.push({
+          kind: 'vocab',
+          lessonId: l.id, level: l.level,
+          title: lessonTitleJp,
+          jp: v.jp,
+          kana: v.kana, romaji: v.romaji,
+          label: v.kana + ' · ' + v.romaji + ' · ' + v.meaning,
+          hay: (v.jp + ' ' + v.kana + ' ' + v.romaji + ' ' + v.meaning + ' ' + (v.pos || '')).toLowerCase(),
+          anchor: 'vocab-' + vi,
+        });
+      });
+      // 3. Grammar points (pattern + name + explain + each example)
+      (l.grammar || []).forEach((g, gi) => {
+        idx.push({
+          kind: 'grammar',
+          lessonId: l.id, level: l.level,
+          title: lessonTitleJp,
+          jp: g.pattern,
+          label: g.name + ' — ' + (g.explain || '').slice(0, 80),
+          hay: (g.pattern + ' ' + g.name + ' ' + (g.explain || '') + ' ' +
+                (g.examples || []).map(e => stripTags(e.jp) + ' ' + e.cn + ' ' + (e.plain || '')).join(' ')
+               ).toLowerCase(),
+          anchor: 'grammar-' + gi,
+        });
+      });
+      // 4. Article sentences
+      (l.articles || []).forEach((article, ai) => {
+        (article.sentences || []).forEach((s, si) => {
+          const stripped = stripTags(s.jp);
+          idx.push({
+            kind: 'sentence',
+            lessonId: l.id, level: l.level,
+            title: lessonTitleJp,
+            jp: stripped,
+            label: '主篇 · ' + s.cn,
+            hay: (stripped + ' ' + s.plain + ' ' + s.romaji + ' ' + s.cn).toLowerCase(),
+            anchor: 'sent-' + (article.kind === 'main' ? 'main' : 'sub') + '-' + ai + '-' + si,
+          });
+        });
+      });
+      // 5. Dialogue lines
+      ((l.dialogue && l.dialogue.lines) || []).forEach((line, li) => {
+        const stripped = stripTags(line.jp);
+        idx.push({
+          kind: 'dialogue',
+          lessonId: l.id, level: l.level,
+          title: lessonTitleJp,
+          jp: stripped,
+          label: '対話 · ' + line.speaker + ' — ' + line.cn,
+          hay: (stripped + ' ' + line.plain + ' ' + line.romaji + ' ' + line.cn + ' ' + line.speaker).toLowerCase(),
+          anchor: 'dlg-' + li,
+        });
+      });
+      // 6. Questions
+      (l.questions || []).forEach((qa, qi) => {
+        const qStripped = stripTags(qa.q.jp);
+        idx.push({
+          kind: 'question',
+          lessonId: l.id, level: l.level,
+          title: lessonTitleJp,
+          jp: qStripped,
+          label: '理解問題 — ' + qa.q.cn,
+          hay: (qStripped + ' ' + qa.q.plain + ' ' + qa.q.cn + ' ' +
+                stripTags(qa.a.jp) + ' ' + qa.a.cn).toLowerCase(),
+          anchor: 'q-' + qi,
+        });
+      });
+    }
+    _searchIndex = idx;
+    return idx;
+  }
+
+  // Score: 3 = exact start; 2 = word-boundary contains; 1 = anywhere.
+  // Plus kind-priority adjustment so lesson > vocab > grammar > sentence.
+  function rankSearch(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const idx = buildSearchIndex();
+    const out = [];
+    const kindPriority = { lesson: 30, vocab: 20, grammar: 18, sentence: 10, dialogue: 9, question: 7 };
+    for (const e of idx) {
+      const i = e.hay.indexOf(q);
+      if (i < 0) continue;
+      let score = 1;
+      if (i === 0) score = 3;
+      else if (e.hay[i - 1] === ' ') score = 2;
+      // Prefer shorter haystacks (more specific match) by mild penalty.
+      const lenPenalty = Math.min(2, e.hay.length / 80);
+      out.push({ e, score: score * 10 + (kindPriority[e.kind] || 0) - lenPenalty });
+    }
+    out.sort((a, b) => b.score - a.score);
+    return out.map(x => x.e);
+  }
+
+  function highlightMatch(haystackOriginal, query) {
+    const q = query.trim();
+    if (!q) return escapeHtml(haystackOriginal);
+    const lc = haystackOriginal.toLowerCase();
+    const i = lc.indexOf(q.toLowerCase());
+    if (i < 0) return escapeHtml(haystackOriginal);
+    return escapeHtml(haystackOriginal.slice(0, i)) +
+           '<mark>' + escapeHtml(haystackOriginal.slice(i, i + q.length)) + '</mark>' +
+           escapeHtml(haystackOriginal.slice(i + q.length));
+  }
+
   // --- TTS engine -----------------------------------------------------------
   const TTS = (() => {
     let voice = null;
@@ -555,6 +686,7 @@
       { href: '#/course',     label: '進度',     match: /^#\/course/ },
       { href: '#/grid',       label: '一覧',     match: /^#\/grid/ },
       { href: '#/reference',  label: '索引',     match: /^#\/reference/ },
+      { href: '#/search',     label: '検索',     match: /^#\/search/ },
     ];
     const hash = location.hash || '#/';
     const html = `
@@ -781,12 +913,14 @@
     const search = (params.q || '').toLowerCase().trim();
     const next = lessonById(p.current) || LESSONS[0];
 
+    // Deep search: when query is non-empty, restrict to lessons that contain
+    // it anywhere in title / vocab / grammar / sentences / dialogue / questions.
+    const matchedLessonIds = search
+      ? new Set(rankSearch(search).map(r => r.lessonId))
+      : null;
     const filtered = LESSONS.filter(l => {
       if (filterLevel !== 'all' && l.level !== filterLevel) return false;
-      if (search) {
-        const hay = (stripTags(l.title.jp) + ' ' + l.title.cn + ' ' + l.title.romaji + ' ' + l.title.en).toLowerCase();
-        if (!hay.includes(search)) return false;
-      }
+      if (matchedLessonIds && !matchedLessonIds.has(l.id)) return false;
       return true;
     });
 
@@ -856,9 +990,12 @@
 
       <div class="grid-wrap">
         <div class="grid-bar">
-          <div class="grid-bar-left"><strong>${filtered.length}</strong> ${filtered.length === LESSONS.length ? 'lessons' : 'shown'} · <strong>${completedTotal}</strong> completed · <strong>${remaining}</strong> remaining</div>
+          <div class="grid-bar-left"><strong>${filtered.length}</strong> ${filtered.length === LESSONS.length ? 'lessons' : (search ? 'lessons match' : 'shown')} · <strong>${completedTotal}</strong> completed · <strong>${remaining}</strong> remaining</div>
+          ${search ? `<a class="deep-search-link" href="#/search?q=${encodeURIComponent(search)}">全コンテンツで検索 →</a>` : ''}
         </div>
-        <div class="grid">${cards || '<p style="color:var(--ink-3);font-family:var(--font-body-jp);padding:24px">該当なし</p>'}</div>
+        <div class="grid">${cards || (search
+            ? `<p style="color:var(--ink-3);font-family:var(--font-body-jp);padding:24px">該当する課がありません。<a href="#/search?q=${encodeURIComponent(search)}" class="txt-link" style="color:var(--vermillion)">語彙・文法・例文の中で検索 →</a></p>`
+            : '<p style="color:var(--ink-3);font-family:var(--font-body-jp);padding:24px">該当なし</p>')}</div>
       </div>
     </section>`;
   }
@@ -897,7 +1034,7 @@
     const articlesHtml = (lesson.articles || []).map((article, ai) => {
       const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
       const sentences = (article.sentences || []).map((s, si) =>
-        `<div class="sentence" data-group="${groupId}" data-index="${si}">
+        `<div class="sentence" data-group="${groupId}" data-index="${si}" data-anchor="sent-${groupId}-${si}">
           <div class="jp-text">${annotateJp(s.jp, s.plain)}</div>
           <div class="romaji">${escapeHtml(s.romaji)}</div>
           <div class="translation">${escapeHtml(s.cn)}</div>
@@ -914,7 +1051,7 @@
     let dialogueHtml = '';
     if (lesson.dialogue && (lesson.dialogue.lines || []).length) {
       const lines = lesson.dialogue.lines.map((line, i) =>
-        `<div class="dialogue-line" data-group="dialogue" data-index="${i}">
+        `<div class="dialogue-line" data-group="dialogue" data-index="${i}" data-anchor="dlg-${i}">
           <div class="speaker">${escapeHtml(line.speaker)}</div>
           <div class="jp-text">${annotateJp(line.jp, line.plain)}</div>
           <div class="romaji">${escapeHtml(line.romaji)}</div>
@@ -934,7 +1071,7 @@
       questionsHtml = `<section>
         <div class="sec-label">理解問題 · comprehension</div>
         ${lesson.questions.map((qa, i) => `
-          <div class="question">
+          <div class="question" data-anchor="q-${i}">
             <div class="question-q">
               <span class="q-mark">Q${i + 1}</span>
               <div class="jp-text" style="font-size:18px">${qa.q.jp}</div>
@@ -953,8 +1090,8 @@
     }
 
     // Vocabulary
-    const vocabHtml = (lesson.vocabulary || []).map(v =>
-      `<div class="vocab-row">
+    const vocabHtml = (lesson.vocabulary || []).map((v, vi) =>
+      `<div class="vocab-row" data-anchor="vocab-${vi}">
         <span class="v-jp">${escapeHtml(v.jp)}</span>
         <span class="v-kana">${escapeHtml(v.kana)}</span>
         <span class="v-pos">${escapeHtml(v.pos || '')}</span>
@@ -963,8 +1100,8 @@
     ).join('');
 
     // Grammar
-    const grammarHtml = (lesson.grammar || []).map(g =>
-      `<div class="grammar-point">
+    const grammarHtml = (lesson.grammar || []).map((g, gi) =>
+      `<div class="grammar-point" data-anchor="grammar-${gi}">
         <div class="grammar-pat-row">
           <span class="grammar-pat">${escapeHtml(g.pattern)}</span>
           <span class="grammar-name">${escapeHtml(g.name)}</span>
@@ -1166,6 +1303,23 @@
       const num = document.querySelector('.lesson-num');
       if (num && !num.textContent.includes('完了')) num.textContent += ' · 完了';
     });
+
+    // Focus anchor — jump to a specific vocab/grammar/sentence/dialogue/question
+    // when the user arrived via search (#/lesson/N?focus=anchor-id). Use an
+    // instant scroll: we want the target to be visible the instant the page
+    // appears, not after a 1.5s smooth-scroll animation.
+    const focusAnchor = (parseHashQuery() || {}).focus;
+    if (focusAnchor) {
+      requestAnimationFrame(() => {
+        const target = document.querySelector('.reader-main [data-anchor="' + focusAnchor + '"]');
+        if (!target) return;
+        const rect = target.getBoundingClientRect();
+        const targetTop = window.innerHeight * 0.28;
+        window.scrollBy({ top: rect.top - targetTop, behavior: 'instant' });
+        target.classList.add('focus-flash');
+        setTimeout(() => target.classList.remove('focus-flash'), 2400);
+      });
+    }
   }
 
   // --- Route: Reference -----------------------------------------------------
@@ -1283,6 +1437,113 @@
     </section>`;
   }
 
+  // --- Route: Search --------------------------------------------------------
+  function viewSearch() {
+    const params = parseHashQuery();
+    const q = (params.q || '').trim();
+    const kindFilter = params.kind || 'all';
+    const results = q ? rankSearch(q) : [];
+    const groups = { lesson: [], vocab: [], grammar: [], sentence: [], dialogue: [], question: [] };
+    for (const r of results) groups[r.kind].push(r);
+
+    const groupLabel = {
+      lesson:   ['課程',     'Lessons'],
+      vocab:    ['語彙',     'Vocabulary'],
+      grammar:  ['文法',     'Grammar'],
+      sentence: ['短文',     'Sentences'],
+      dialogue: ['対話',     'Dialogue'],
+      question: ['理解問題', 'Questions'],
+    };
+
+    function renderResultRow(r) {
+      const href = '#/lesson/' + r.lessonId + (r.anchor ? '?focus=' + encodeURIComponent(r.anchor) : '');
+      const jpHl = highlightMatch(r.jp || '', q);
+      const labelHl = highlightMatch(r.label || '', q);
+      return `<a class="search-row" href="${href}">
+        <span class="search-row-kind">${r.kind}</span>
+        <div class="search-row-body">
+          <div class="search-row-jp">${jpHl}</div>
+          <div class="search-row-meta">${labelHl}</div>
+        </div>
+        <span class="search-row-lesson">L${pad2(r.lessonId)} · ${r.level}</span>
+      </a>`;
+    }
+
+    const visibleKinds = kindFilter === 'all'
+      ? Object.keys(groupLabel).filter(k => groups[k].length)
+      : [kindFilter].filter(k => groups[k] && groups[k].length);
+
+    const blocks = visibleKinds.map(k =>
+      `<section class="search-group">
+        <header class="search-group-head">
+          <span class="kicker">${groupLabel[k][0]} · ${groupLabel[k][1]}</span>
+          <small>${groups[k].length} ${groups[k].length === 1 ? 'match' : 'matches'}</small>
+        </header>
+        ${groups[k].slice(0, 50).map(renderResultRow).join('')}
+        ${groups[k].length > 50 ? `<p class="search-overflow">+ ${groups[k].length - 50} more · refine query</p>` : ''}
+      </section>`
+    ).join('');
+
+    const total = results.length;
+    const tabs = [
+      { key: 'all',      label: 'All',     count: total },
+      { key: 'lesson',   label: 'Lessons', count: groups.lesson.length },
+      { key: 'vocab',    label: 'Vocab',   count: groups.vocab.length },
+      { key: 'grammar',  label: 'Grammar', count: groups.grammar.length },
+      { key: 'sentence', label: 'Lines',   count: groups.sentence.length + groups.dialogue.length + groups.question.length },
+    ];
+
+    return `
+    <section class="search-route">
+      <header class="search-head">
+        <div>
+          <div class="kicker">— Deep search</div>
+          <h2 style="margin-top:14px">「${escapeHtml(q || '…')}」<span class="small">${q ? total + ' results across all 50 lessons' : 'Type a kanji, kana, romaji, meaning, grammar pattern, or part of a sentence.'}</span></h2>
+        </div>
+        <label class="search-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+          <input id="search-input" type="search" placeholder="検索…" value="${escapeHtml(q)}" autocomplete="off">
+        </label>
+      </header>
+      ${q ? `
+      <nav class="search-tabs">
+        ${tabs.map(t => `<a class="search-tab ${kindFilter === t.key ? 'active' : ''}" href="#/search?q=${encodeURIComponent(q)}&kind=${t.key}">${t.label} <small>${t.count}</small></a>`).join('')}
+      </nav>
+      ` : ''}
+      <div class="search-results">
+        ${q ? (blocks || '<p class="search-empty">該当なし · No matches for that query.</p>') : `
+        <div class="search-empty-tip">
+          <p>「<strong>けいご</strong>」 → 敬語入門の課を探す</p>
+          <p>「<strong>受身</strong>」 → 第 21 課の文法点</p>
+          <p>「<strong>kao</strong>」 → 顔, 顔色 などすべて</p>
+          <p>「<strong>初めて</strong>」 → 出てくるすべての例文</p>
+        </div>
+        `}
+      </div>
+    </section>`;
+  }
+
+  function bindSearchPage() {
+    const input = document.getElementById('search-input');
+    if (!input) return;
+    input.focus();
+    let t;
+    input.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const q = input.value.trim();
+        const params = parseHashQuery();
+        const kind = params.kind || 'all';
+        const target = q ? '#/search?q=' + encodeURIComponent(q) + '&kind=' + kind : '#/search';
+        history.replaceState(null, '', target);
+        navigate();
+      }, 150);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { history.back(); }
+    });
+  }
+
   // --- Router ---------------------------------------------------------------
   function parseHashQuery() {
     const h = location.hash || '';
@@ -1310,6 +1571,9 @@
     } else if (path === '#/grid') {
       html = viewGrid();
       onMount = bindGridSearch;
+    } else if (path === '#/search') {
+      html = viewSearch();
+      onMount = bindSearchPage;
     } else if (path === '#/reference') {
       html = viewReference();
     } else if (path.startsWith('#/lesson/')) {
@@ -1384,6 +1648,126 @@
     document.getElementById('sw-dismiss-btn').addEventListener('click', () => t.remove());
   }
 
+  // --- Command palette ------------------------------------------------------
+  // Floating modal triggered by `/` or `Ctrl/Cmd+K`. Real-time filter the
+  // search index, click a row to jump. Escape closes.
+  function ensurePaletteRoot() {
+    let root = document.getElementById('cmdk');
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = 'cmdk';
+    root.className = 'cmdk hidden';
+    root.innerHTML =
+      '<div class="cmdk-backdrop" data-close="1"></div>' +
+      '<div class="cmdk-panel" role="dialog" aria-label="Search">' +
+        '<label class="cmdk-input-row">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>' +
+          '<input id="cmdk-input" type="search" placeholder="語彙、文法、例文…">' +
+          '<kbd>Esc</kbd>' +
+        '</label>' +
+        '<div id="cmdk-results" class="cmdk-results"></div>' +
+        '<div class="cmdk-foot"><kbd>↑↓</kbd> 移動 · <kbd>↵</kbd> 開く · <a href="#/search">全結果へ →</a></div>' +
+      '</div>';
+    document.body.appendChild(root);
+    root.addEventListener('click', (e) => {
+      if (e.target instanceof HTMLElement && e.target.dataset.close === '1') closePalette();
+    });
+    return root;
+  }
+
+  let paletteSelectedIdx = 0;
+  let paletteResults = [];
+  function openPalette() {
+    const root = ensurePaletteRoot();
+    root.classList.remove('hidden');
+    const input = document.getElementById('cmdk-input');
+    if (input) {
+      input.value = '';
+      input.focus();
+      paletteResults = [];
+      paletteSelectedIdx = 0;
+      renderPaletteResults('');
+      input.oninput = () => renderPaletteResults(input.value);
+      input.onkeydown = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); closePalette(); return; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); movePaletteSel(1); return; }
+        if (e.key === 'ArrowUp')   { e.preventDefault(); movePaletteSel(-1); return; }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const r = paletteResults[paletteSelectedIdx];
+          if (r) {
+            const target = '#/lesson/' + r.lessonId + (r.anchor ? '?focus=' + encodeURIComponent(r.anchor) : '');
+            location.hash = target;
+            closePalette();
+          } else if (input.value.trim()) {
+            location.hash = '#/search?q=' + encodeURIComponent(input.value.trim());
+            closePalette();
+          }
+        }
+      };
+    }
+  }
+  function closePalette() {
+    const root = document.getElementById('cmdk');
+    if (root) root.classList.add('hidden');
+  }
+  function renderPaletteResults(q) {
+    const out = document.getElementById('cmdk-results');
+    if (!out) return;
+    const trimmed = q.trim();
+    if (!trimmed) {
+      out.innerHTML = '<div class="cmdk-tip">漢字 / かな / romaji / 中文 — どれでも</div>';
+      paletteResults = [];
+      return;
+    }
+    paletteResults = rankSearch(trimmed).slice(0, 10);
+    paletteSelectedIdx = 0;
+    if (paletteResults.length === 0) {
+      out.innerHTML = '<div class="cmdk-empty">該当なし</div>';
+      return;
+    }
+    out.innerHTML = paletteResults.map((r, i) =>
+      `<a class="cmdk-row${i === 0 ? ' selected' : ''}" data-i="${i}" href="#/lesson/${r.lessonId}${r.anchor ? '?focus=' + encodeURIComponent(r.anchor) : ''}">
+        <span class="cmdk-kind">${r.kind}</span>
+        <span class="cmdk-jp">${highlightMatch(r.jp || '', trimmed)}</span>
+        <span class="cmdk-meta">${highlightMatch(r.label || '', trimmed)}</span>
+        <span class="cmdk-lesson">L${pad2(r.lessonId)}</span>
+      </a>`
+    ).join('');
+    out.querySelectorAll('.cmdk-row').forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        const i = parseInt(row.dataset.i, 10);
+        if (Number.isFinite(i)) {
+          paletteSelectedIdx = i;
+          out.querySelectorAll('.cmdk-row').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+        }
+      });
+      row.addEventListener('click', () => closePalette());
+    });
+  }
+  function movePaletteSel(delta) {
+    const out = document.getElementById('cmdk-results');
+    if (!out || paletteResults.length === 0) return;
+    paletteSelectedIdx = (paletteSelectedIdx + delta + paletteResults.length) % paletteResults.length;
+    out.querySelectorAll('.cmdk-row').forEach((r, i) => r.classList.toggle('selected', i === paletteSelectedIdx));
+    const sel = out.querySelector('.cmdk-row.selected');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+
+  function wirePaletteHotkeys() {
+    document.addEventListener('keydown', (e) => {
+      // Don't intercept when user is typing in another input.
+      const inField = e.target instanceof HTMLElement && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
+      const isOpen = !document.getElementById('cmdk')?.classList.contains('hidden');
+      if ((e.key === '/' && !inField && !isOpen) ||
+          ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        openPalette();
+      }
+    });
+  }
+
   function wireOfflineIndicator() {
     const update = () => {
       const pill = document.getElementById('tts-status');
@@ -1409,8 +1793,9 @@
     renderFooter();
     navigate();
     wireOfflineIndicator();
+    wirePaletteHotkeys();
     registerServiceWorker();
   });
-  window.addEventListener('hashchange', navigate);
+  window.addEventListener('hashchange', () => { closePalette(); navigate(); });
 
 })();
