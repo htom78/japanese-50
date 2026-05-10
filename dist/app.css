@@ -99,6 +99,50 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--bg-tint);
 }
 .tts-pill.unavailable { background: rgba(184,85,63,0.12); color: var(--vermillion); }
+.tts-pill.offline { background: rgba(184,85,63,0.12); color: var(--vermillion); }
+.tts-pill.offline::before {
+  content: ''; display: inline-block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--vermillion); margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Service Worker update toast — bottom-right pill, doesn't fight audio rail */
+.sw-toast {
+  position: fixed;
+  right: 24px; bottom: 24px;
+  z-index: 100;
+  background: var(--ink); color: var(--bg);
+  padding: 10px 12px 10px 18px;
+  border-radius: 999px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-body-jp);
+  font-size: 13px;
+  box-shadow: var(--shadow-lift);
+  animation: sw-toast-in 320ms var(--ease);
+}
+@keyframes sw-toast-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.sw-toast button {
+  background: transparent;
+  border: 1px solid rgba(247,244,238,0.25);
+  color: var(--bg);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 200ms;
+}
+.sw-toast button:hover { background: rgba(247,244,238,0.12); }
+.sw-toast #sw-dismiss-btn { padding: 4px 10px; font-size: 14px; line-height: 1; }
+@media (max-width: 760px) {
+  .sw-toast { right: 12px; bottom: 84px; left: 12px; justify-content: center; }
+  .sw-toast > span { flex: 1; }
+}
 
 /* ============================================================
    Generic helpers

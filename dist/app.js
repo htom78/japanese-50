@@ -1294,10 +1294,75 @@
     }
   }
 
+  // --- Service Worker -------------------------------------------------------
+  // Register only on http(s) — file:// and SW are incompatible.
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        // Watch for an updated SW taking control while the app is open.
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateToast();
+            }
+          });
+        });
+      }).catch(() => { /* swallow — SW failure shouldn't block the app */ });
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // The new SW is now controlling. Don't auto-reload — the toast offers it.
+      });
+    });
+  }
+
+  function showUpdateToast() {
+    if (document.getElementById('sw-update-toast')) return;
+    const t = document.createElement('div');
+    t.id = 'sw-update-toast';
+    t.className = 'sw-toast';
+    t.innerHTML =
+      '<span>新しいバージョンが利用可能です</span>' +
+      '<button id="sw-update-btn">更新</button>' +
+      '<button id="sw-dismiss-btn" aria-label="dismiss">×</button>';
+    document.body.appendChild(t);
+    document.getElementById('sw-update-btn').addEventListener('click', () => {
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg && reg.waiting) reg.waiting.postMessage('skip-waiting');
+        location.reload();
+      });
+    });
+    document.getElementById('sw-dismiss-btn').addEventListener('click', () => t.remove());
+  }
+
+  function wireOfflineIndicator() {
+    const update = () => {
+      const pill = document.getElementById('tts-status');
+      if (!pill) return;
+      if (!navigator.onLine) {
+        pill.dataset.offline = '1';
+        pill.textContent = 'オフライン · cached';
+        pill.classList.add('offline');
+      } else if (pill.dataset.offline === '1') {
+        // Was offline; re-pick voice text (TTS module will refresh on next nav).
+        pill.dataset.offline = '';
+        pill.classList.remove('offline');
+        pill.textContent = '音声 · ' + (window.speechSynthesis ? '' : '未対応');
+      }
+    };
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    update();
+  }
+
   // --- Boot -----------------------------------------------------------------
   document.addEventListener('DOMContentLoaded', () => {
     renderFooter();
     navigate();
+    wireOfflineIndicator();
+    registerServiceWorker();
   });
   window.addEventListener('hashchange', navigate);
 

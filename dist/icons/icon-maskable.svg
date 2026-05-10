@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable: bleed bg to edges, content sits within central 80% safe zone (51..461) -->
+  <rect width="512" height="512" fill="#B8553F"/>
+  <text x="256" y="346" text-anchor="middle"
+        font-family="'Noto Serif JP','Hiragino Mincho ProN',serif"
+        font-size="240" font-weight="600" fill="#FFFFFF">課</text>
+</svg>
