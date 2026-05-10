@@ -875,13 +875,22 @@ body.hide-translation .translation { display: none; }
   max-height: 380px; overflow-y: auto;
 }
 .ctx-vocab-item {
-  display: grid; grid-template-columns: 100px 1fr; gap: 10px;
-  padding: 7px 0;
+  display: grid; grid-template-columns: minmax(100px, 1.1fr) 1fr; gap: 12px;
+  padding: 8px 0;
   border-bottom: 1px dashed var(--line);
   font-size: 12px;
+  align-items: baseline;
 }
 .ctx-vocab-item:last-child { border-bottom: 0; }
-.ctx-vocab-item .v-jp { font-family: var(--font-display-jp); font-size: 13px; }
+.ctx-vocab-item .v-head {
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+}
+.ctx-vocab-item .v-jp { font-family: var(--font-display-jp); font-size: 13px; color: var(--ink); }
+.ctx-vocab-item .v-reading {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-3); letter-spacing: 0.02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .ctx-vocab-item .v-mean { color: var(--ink-2); font-family: var(--font-body-jp); }
 
 /* Lesson nav prev/next */

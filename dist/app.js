@@ -287,7 +287,10 @@
       synth.cancel();
       clearAllPlaying();
       currentItem = item;
-      if (currentItem.el) currentItem.el.classList.add('playing');
+      if (currentItem.el) {
+        currentItem.el.classList.add('playing');
+        scrollItemIntoView(currentItem.el);
+      }
       if (nowReadingEl) nowReadingEl.textContent = currentItem.plain;
       speak(item, () => {
         if (currentItem && currentItem.el) currentItem.el.classList.remove('playing');
@@ -295,6 +298,43 @@
         currentItem = null;
         onComplete && onComplete();
       });
+    }
+
+    // Keep the active sentence in the upper third of the viewport, above the
+    // fixed audio rail. Skip if the element is already comfortably in zone or
+    // the user just manually scrolled (within ~3s).
+    let lastUserScrollTs = 0;
+    let scrollerInstalled = false;
+    function installUserScrollGuard() {
+      if (scrollerInstalled) return;
+      scrollerInstalled = true;
+      let isProgrammatic = false;
+      const stamp = () => { if (!isProgrammatic) lastUserScrollTs = performance.now(); };
+      window.addEventListener('wheel', stamp, { passive: true });
+      window.addEventListener('touchmove', stamp, { passive: true });
+      window.addEventListener('keydown', (e) => {
+        if (['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(e.key)) stamp();
+      });
+      // Suppress own programmatic scrolls from being mistaken for user input.
+      const origScrollBy = window.scrollBy.bind(window);
+      window.__progScroll = (opts) => { isProgrammatic = true; origScrollBy(opts); setTimeout(() => { isProgrammatic = false; }, 700); };
+    }
+
+    function scrollItemIntoView(el) {
+      if (!el) return;
+      installUserScrollGuard();
+      // If the user scrolled in the last 2.5s, don't fight them.
+      if (performance.now() - lastUserScrollTs < 2500) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Aim for the sentence to sit at ~30% from the top — leaves room above
+      // for the previous sentence and below for the audio rail (~76px tall).
+      const targetTop = vh * 0.30;
+      const delta = rect.top - targetTop;
+      // Already comfortably in zone — leave alone.
+      if (rect.top >= vh * 0.20 && rect.bottom <= vh - 110) return;
+      if (Math.abs(delta) < 24) return;
+      (window.__progScroll || window.scrollBy.bind(window))({ top: delta, behavior: 'smooth' });
     }
 
     function clearAllPlaying() {
@@ -941,9 +981,16 @@
     const spotsHtml = (lesson.grammar || []).slice(0, 6).map(g =>
       `<div class="spot"><div class="spot-pat">${escapeHtml(g.pattern)}</div><div class="spot-name">${escapeHtml(g.name)}</div></div>`
     ).join('');
-    const ctxVocabHtml = (lesson.vocabulary || []).slice(0, 14).map(v =>
-      `<div class="ctx-vocab-item"><span class="v-jp">${escapeHtml(v.jp)}</span><span class="v-mean">${escapeHtml(v.meaning)}</span></div>`
-    ).join('');
+    const ctxVocabHtml = (lesson.vocabulary || []).slice(0, 14).map(v => {
+      const reading = [v.kana, v.romaji].filter(Boolean).map(escapeHtml).join(' · ');
+      return `<div class="ctx-vocab-item">
+        <div class="v-head">
+          <span class="v-jp">${escapeHtml(v.jp)}</span>
+          ${reading ? `<span class="v-reading">${reading}</span>` : ''}
+        </div>
+        <span class="v-mean">${escapeHtml(v.meaning)}</span>
+      </div>`;
+    }).join('');
 
     const navFoot = `
       <div class="lesson-nav-foot">
