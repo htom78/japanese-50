@@ -416,20 +416,27 @@
   }
 
   // --- TTS engine -----------------------------------------------------------
-  // Backend MiniMax TTS config. Resolved from <meta name="tts-backend">,
-  // window.__TTS_BACKEND, or localStorage. Empty/falsy = use Web Speech only.
+  // Backend MiniMax TTS config. Resolution order:
+  //   <meta name="tts-backend"> > window.__TTS_BACKEND > localStorage >
+  //   same-origin when served over http(s) > disabled on file:// dev.
+  // The literal sentinel "off" anywhere disables backend entirely.
   function resolveBackendBase() {
     try {
       const meta = document.querySelector('meta[name="tts-backend"]');
-      if (meta && meta.content) return meta.content.replace(/\/+$/, '');
-      if (window.__TTS_BACKEND) return String(window.__TTS_BACKEND).replace(/\/+$/, '');
+      if (meta && meta.content != null) return meta.content.trim().replace(/\/+$/, '');
+      if (window.__TTS_BACKEND != null) return String(window.__TTS_BACKEND).trim().replace(/\/+$/, '');
       const ls = localStorage.getItem('jp50.tts.backend');
-      if (ls) return ls.replace(/\/+$/, '');
+      if (ls != null) return ls.trim().replace(/\/+$/, '');
     } catch {}
-    return '';
+    // Default: same-origin when served over http(s). file:// has no backend.
+    if (location.protocol === 'http:' || location.protocol === 'https:') return '';
+    return 'off';
   }
-  const BACKEND_BASE = resolveBackendBase();
-  let backendDisabled = false; // turned true after first hard failure to avoid retry storms
+  const BACKEND_BASE_RAW = resolveBackendBase();
+  const BACKEND_ENABLED = BACKEND_BASE_RAW !== 'off';
+  // For URL building: empty string = same-origin (just use the path).
+  const BACKEND_BASE = BACKEND_ENABLED ? BACKEND_BASE_RAW : '';
+  let backendDisabled = !BACKEND_ENABLED; // flips to true on first hard failure to avoid retry storms
 
   const TTS = (() => {
     let voice = null;
@@ -458,7 +465,7 @@
       }
       const pill = document.getElementById('tts-status');
       if (pill) {
-        if (BACKEND_BASE && !backendDisabled) {
+        if (BACKEND_ENABLED && !backendDisabled) {
           pill.textContent = '音声 · MiniMax';
           pill.classList.remove('unavailable');
         } else if (voice) {
@@ -598,7 +605,7 @@
 
       const gen = ++speakGeneration;
 
-      if (BACKEND_BASE && !backendDisabled) {
+      if (BACKEND_ENABLED && !backendDisabled) {
         speakViaBackend(item, gen, onEnd).catch((err) => {
           // First failure: disable backend for the rest of this session.
           backendDisabled = true;
@@ -745,7 +752,7 @@
       updatePlayBtn();
     }
 
-    function hasAnyTts() { return Boolean(synth) || (Boolean(BACKEND_BASE) && !backendDisabled); }
+    function hasAnyTts() { return Boolean(synth) || (BACKEND_ENABLED && !backendDisabled); }
 
     // Single sentence with N-time loop
     function playSingle(item) {
