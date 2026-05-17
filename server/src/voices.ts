@@ -5,15 +5,22 @@ export interface VoiceOption {
   jaFriendly: boolean;
 }
 
-// Subset of MiniMax T2A built-in voices known to perform well on Japanese.
-// Full catalog: https://platform.minimaxi.com/document/T2A%20V2
+// Verified against api.minimaxi.chat — entries removed if upstream returns
+// status 2054 ("voice id not exist"). Top entry is a user-cloned voice
+// (intellectual female), used as default on the deployed app.
 export const VOICES: ReadonlyArray<VoiceOption> = [
+  { id: 'moss_audio_66200a8a-04fd-11f1-bea2-224d1feaaf61', label: '默认 · 知性女声 (克隆)', gender: 'female', jaFriendly: true },
   { id: 'Japanese_KindLady', label: '日本語 · やさしい女性', gender: 'female', jaFriendly: true },
   { id: 'Japanese_IntellectualSenior', label: '日本語 · 知的なシニア男性', gender: 'male', jaFriendly: true },
-  { id: 'Japanese_DecentYoungMan', label: '日本語 · 礼儀正しい青年', gender: 'male', jaFriendly: true },
-  { id: 'Japanese_SweetHerbivore', label: '日本語 · 草食系女性', gender: 'female', jaFriendly: true },
-  { id: 'female-shaonv', label: '少女 (汎用)', gender: 'female', jaFriendly: false },
-  { id: 'male-qn-qingse', label: '青瑟 (汎用)', gender: 'male', jaFriendly: false },
+  { id: 'female-yujie', label: '御姐 (通用)', gender: 'female', jaFriendly: false },
+  { id: 'female-chengshu', label: '成熟女声 (通用)', gender: 'female', jaFriendly: false },
+  { id: 'audiobook_female_1', label: '朗读女声 1', gender: 'female', jaFriendly: false },
+  { id: 'audiobook_female_2', label: '朗读女声 2', gender: 'female', jaFriendly: false },
+  { id: 'presenter_female', label: '主持女声', gender: 'female', jaFriendly: false },
+  { id: 'female-tianmei', label: '甜美女声', gender: 'female', jaFriendly: false },
+  { id: 'female-shaonv', label: '少女', gender: 'female', jaFriendly: false },
+  { id: 'lovely_girl', label: 'Lovely Girl', gender: 'female', jaFriendly: false },
+  { id: 'male-qn-qingse', label: '青瑟男声', gender: 'male', jaFriendly: false },
 ];
 
-export const DEFAULT_VOICE_ID = 'Japanese_KindLady';
+export const DEFAULT_VOICE_ID = 'moss_audio_66200a8a-04fd-11f1-bea2-224d1feaaf61';
