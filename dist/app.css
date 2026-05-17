@@ -593,6 +593,25 @@ a { color: var(--ink); }
 }
 body.hide-furigana rt { opacity: 0; }
 
+/* Per-kchar column layout: kana/kanji on top, aligned romaji underneath. */
+.jp-text .kchar {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: top;
+}
+.jp-text .kchar-top { display: block; }
+.jp-text .kchar-romaji {
+  font-family: var(--font-display-en); font-style: italic;
+  font-size: 12px; color: var(--ink-3);
+  line-height: 1.2; margin-top: 1px;
+  letter-spacing: 0.01em;
+  white-space: pre;
+  transition: opacity 280ms var(--ease);
+}
+body.hide-romaji .jp-text .kchar-romaji { display: none; }
+
+/* Legacy .romaji block (still used by Q&A which doesn't go through annotateJp). */
 .romaji {
   font-family: var(--font-display-en); font-style: italic;
   font-size: 13px; color: var(--ink-3); margin-top: 4px;
@@ -613,10 +632,12 @@ body.hide-translation .translation { display: none; }
   position: relative;
   transition: color 200ms var(--ease), background 220ms var(--ease);
 }
-.kchar.kc-past {
+.kchar.kc-past .kchar-top,
+.kchar.kc-past:not(:has(.kchar-top)) {
   color: var(--ink-3);
 }
-.kchar.kc-active {
+.kchar.kc-active .kchar-top,
+.kchar.kc-active:not(:has(.kchar-top)) {
   color: var(--vermillion);
   background: linear-gradient(transparent 70%, rgba(184, 85, 63, 0.22) 70%);
 }

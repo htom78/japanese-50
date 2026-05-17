@@ -28,42 +28,138 @@
   //   any standalone character    → one span owning 1 char in plain
   // The renderer also exposes the span's [pStart, pStart+pLen) range so the
   // TTS engine can highlight by SpeechSynthesisUtterance.charIndex.
-  function annotateJp(jp, plain) {
+  // ---------- Romaji per-kana alignment ----------
+  // Hepburn-ish latin-char count per kana. Defaults to 2 for anything missing,
+  // which covers most CV morae. The walker resyncs at word boundaries (spaces
+  // in romaji), so single-kana drift gets absorbed at the next gap.
+  const KANA_LEN = (() => {
+    const m = Object.create(null);
+    const set = (s, n) => { for (const c of s) m[c] = n; };
+    set('あいうえおアイウエオ', 1);
+    set('ん', 1); set('ン', 1);
+    set('っ', 1); set('ッ', 1);
+    set('ー', 1);
+    set('かきくけこがぎぐげごカキクケコガギグゲゴ', 2);
+    set('さすせそざじずぜぞサスセソザジズゼゾ', 2);
+    set('たてとだでどタテトダデド', 2);
+    set('なにぬねのナニヌネノ', 2);
+    set('はひへほばびぶべぼぱぴぷぺぽハヒヘホバビブベボパピプペポ', 2);
+    set('まみむめもマミムメモ', 2);
+    set('やゆよヤユヨ', 2);
+    set('らりるれろラリルレロ', 2);
+    set('わをワヲ', 2);
+    set('しシ', 3);
+    set('ちつチツ', 3);
+    set('ふフ', 2);
+    return m;
+  })();
+  const YOON = new Set(['ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ']);
+  const YOON_LEN = 3; // kya / sha / cho etc.
+  const YOON_LEN_J = 2; // ja / ju / jo
+
+  function isLatinWS(c) {
+    return c === " " || c === "\t" || c.charCodeAt(0) === 0xA0 || c === "-" || c === "'" || c === "\u2019";
+  }
+
+  // Returns an array of length plain.length+1 where offsets[i] is the romaji
+  // index aligned to plain[0..i). Uses table + word-boundary resync.
+  function alignRomaji(plain, romaji) {
+    const out = new Array(plain.length + 1);
+    out[0] = 0;
+    let ri = 0;
+    let pi = 0;
+    while (pi < plain.length) {
+      // Skip leading word-boundary whitespace; these chars belong to no mora.
+      while (ri < romaji.length && isLatinWS(romaji[ri])) ri++;
+      const ch = plain[pi];
+      const next = plain[pi + 1];
+      let consumed = 1;
+      let expected;
+      if (next && YOON.has(next)) {
+        consumed = 2;
+        expected = (ch === 'じ' || ch === 'ジ') ? YOON_LEN_J : YOON_LEN;
+      } else if (KANA_LEN[ch] !== undefined) {
+        expected = KANA_LEN[ch];
+      } else {
+        // Punctuation / unknown — treat as 1 latin char.
+        expected = 1;
+      }
+      ri = Math.min(romaji.length, ri + expected);
+      pi += consumed;
+      out[pi] = ri;
+      if (consumed === 2) out[pi - 1] = ri; // youon: small kana shares end offset
+    }
+    // Fill any remainder.
+    for (let i = pi + 1; i <= plain.length; i++) out[i] = romaji.length;
+    return out;
+  }
+
+  function sliceForKchar(plain, romaji, offsets, ps, pl) {
+    if (!offsets) return '';
+    const start = offsets[ps] ?? 0;
+    // Extend to absorb trailing whitespace/punctuation before next mora's offset.
+    let end = offsets[ps + pl] ?? romaji.length;
+    while (end < romaji.length && isLatinWS(romaji[end])) end++;
+    return romaji.slice(start, end);
+  }
+
+  function annotateJp(jp, plain, romaji) {
     if (!jp) return '';
+    const offsets = romaji ? alignRomaji(plain, romaji) : null;
     let pIdx = 0;
     let i = 0;
     let out = '';
     const n = jp.length;
+
+    // Buffer of consecutive standalone (non-ruby) chars, flushed as a single
+    // kchar so the romaji slice for "です" reads as one word rather than two
+    // narrow columns. Karaoke still tracks the whole span by [ps, ps+pl).
+    let runStart = pIdx;
+    let runChars = '';
+    const emit = (ps, pl, topHtml) => {
+      const slice = offsets ? sliceForKchar(plain, romaji, offsets, ps, pl) : '';
+      const romajiHtml = slice
+        ? '<span class="kchar-romaji">' + escapeHtml(slice).replace(/ /g, '&nbsp;') + '</span>'
+        : '';
+      out +=
+        '<span class="kchar" data-ps="' + ps + '" data-pl="' + pl + '">' +
+          '<span class="kchar-top">' + topHtml + '</span>' +
+          romajiHtml +
+        '</span>';
+    };
+    const flushRun = () => {
+      if (!runChars) return;
+      emit(runStart, runChars.length, runChars);
+      runChars = '';
+    };
+
     while (i < n) {
       if (jp.startsWith('<ruby>', i)) {
+        flushRun();
         const rtStart = jp.indexOf('<rt>', i);
         const rtEnd = jp.indexOf('</rt>', rtStart);
         const rubyEnd = jp.indexOf('</ruby>', rtEnd);
         if (rtStart < 0 || rtEnd < 0 || rubyEnd < 0) {
-          // Malformed ruby — emit as a literal char and advance.
-          out += '<span class="kchar" data-ps="' + pIdx + '" data-pl="1">' + jp[i] + '</span>';
+          emit(pIdx, 1, jp[i]);
           pIdx += 1;
           i += 1;
           continue;
         }
         const reading = jp.slice(rtStart + 4, rtEnd);
         const pLen = reading.length;
-        const inner = jp.slice(i + 6, rubyEnd) // includes <rt>...</rt>
-          // keep ruby markup intact for furigana display
-          ;
-        out += '<span class="kchar" data-ps="' + pIdx + '" data-pl="' + pLen + '"><ruby>' + inner + '</ruby></span>';
+        const inner = jp.slice(i + 6, rubyEnd);
+        emit(pIdx, pLen, '<ruby>' + inner + '</ruby>');
         pIdx += pLen;
-        i = rubyEnd + 7; // length of '</ruby>'
+        i = rubyEnd + 7;
+        runStart = pIdx;
       } else {
-        // Standalone character. Most punctuation / kana / katakana is 1 char
-        // in `plain` too. We do not split surrogate pairs because the dataset
-        // only uses BMP code points.
-        const ch = jp[i];
-        out += '<span class="kchar" data-ps="' + pIdx + '" data-pl="1">' + ch + '</span>';
+        if (!runChars) runStart = pIdx;
+        runChars += jp[i];
         pIdx += 1;
         i += 1;
       }
     }
+    flushRun();
     return out;
   }
 
@@ -1199,8 +1295,7 @@
       const groupId = (article.kind === 'main' ? 'main' : 'sub') + '-' + ai;
       const sentences = (article.sentences || []).map((s, si) =>
         `<div class="sentence" data-group="${groupId}" data-index="${si}" data-anchor="sent-${groupId}-${si}">
-          <div class="jp-text">${annotateJp(s.jp, s.plain)}</div>
-          <div class="romaji">${escapeHtml(s.romaji)}</div>
+          <div class="jp-text">${annotateJp(s.jp, s.plain, s.romaji)}</div>
           <div class="translation">${escapeHtml(s.cn)}</div>
         </div>`
       ).join('');
@@ -1217,8 +1312,7 @@
       const lines = lesson.dialogue.lines.map((line, i) =>
         `<div class="dialogue-line" data-group="dialogue" data-index="${i}" data-anchor="dlg-${i}">
           <div class="speaker">${escapeHtml(line.speaker)}</div>
-          <div class="jp-text">${annotateJp(line.jp, line.plain)}</div>
-          <div class="romaji">${escapeHtml(line.romaji)}</div>
+          <div class="jp-text">${annotateJp(line.jp, line.plain, line.romaji)}</div>
           <div class="translation">${escapeHtml(line.cn)}</div>
         </div>`
       ).join('');
