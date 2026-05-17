@@ -85,9 +85,55 @@ npm run build           # typecheck + generate + generate:spa 一条龙
 ## 技术栈
 
 - TypeScript(strict + noUncheckedIndexedAccess)
-- 零运行时依赖(浏览器端)
+- 浏览器端零运行时依赖
 - Playwright(仅用于设计稿截图,不参与运行时)
-- Web Speech API(TTS)
+- **TTS 双通道**:后端 MiniMax T2A v2(高保真日语)→ 回退 Web Speech API
+- 后端:Node 20+ · Fastify 4 · Zod · undici · Vitest
+
+## 后端 TTS (MiniMax)
+
+> 不配置后端时,SPA 默认走 Web Speech API,与重构前完全兼容。
+
+### 快速启动
+
+```bash
+cd server
+cp ../.env.example .env        # 填入 MINIMAX_API_KEY / MINIMAX_GROUP_ID
+npm install
+npm run dev                    # tsx watch · 默认 http://127.0.0.1:8787
+```
+
+### 端点
+
+| Method | Path | 说明 |
+|---|---|---|
+| GET | `/api/health` | 健康检查 + 是否已配置 MiniMax |
+| GET | `/api/voices` | 可用音色列表(含日语友好音色) |
+| GET | `/api/tts?text=&voice=&speed=` | 合成 mp3。`sha256(text+voice+speed+model)` 磁盘缓存(`server/.cache/`),命中走 `X-Cache: HIT` |
+
+### 前端接入
+
+`dist/app.js` 的 TTS 引擎会自动检测后端基址,优先级:
+
+1. `<meta name="tts-backend" content="https://your.api">`
+2. `window.__TTS_BACKEND = "..."`(打包/CI 注入)
+3. `localStorage.setItem('jp50.tts.backend', '...')`(本地试用)
+
+请求失败 / 503 / 网络错误时,本会话内自动禁用后端,回退 Web Speech,**不会重试风暴**。
+
+### 测试
+
+```bash
+cd server
+npm test          # vitest run · 22 用例(cache / config / minimax mock / app inject)
+npm run test:cov  # v8 覆盖率,阈值 lines/statements/functions ≥ 80, branches ≥ 75
+```
+
+当前覆盖率:lines 92.3% / branches 82.9% / functions 100%。
+
+### 环境变量
+
+详见 `.env.example`。要点:`MINIMAX_API_KEY` / `MINIMAX_GROUP_ID` 必填,缺失时 `/api/tts` 返回 503。`MINIMAX_MODEL` 默认 `speech-02-hd`(影响缓存键)。
 
 ## 验收清单
 

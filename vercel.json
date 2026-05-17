@@ -2,6 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "cleanUrls": true,
+  "functions": {
+    "api/*.ts": { "runtime": "@vercel/node@3.2.0", "maxDuration": 30 }
+  },
   "headers": [
     {
       "source": "/(.*)\\.(js|css|png|svg|woff2)",
@@ -13,6 +16,12 @@
       "source": "/data.js",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
       ]
     }
   ]

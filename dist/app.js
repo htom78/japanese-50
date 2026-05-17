@@ -320,6 +320,21 @@
   }
 
   // --- TTS engine -----------------------------------------------------------
+  // Backend MiniMax TTS config. Resolved from <meta name="tts-backend">,
+  // window.__TTS_BACKEND, or localStorage. Empty/falsy = use Web Speech only.
+  function resolveBackendBase() {
+    try {
+      const meta = document.querySelector('meta[name="tts-backend"]');
+      if (meta && meta.content) return meta.content.replace(/\/+$/, '');
+      if (window.__TTS_BACKEND) return String(window.__TTS_BACKEND).replace(/\/+$/, '');
+      const ls = localStorage.getItem('jp50.tts.backend');
+      if (ls) return ls.replace(/\/+$/, '');
+    } catch {}
+    return '';
+  }
+  const BACKEND_BASE = resolveBackendBase();
+  let backendDisabled = false; // turned true after first hard failure to avoid retry storms
+
   const TTS = (() => {
     let voice = null;
     let queue = [];
@@ -335,15 +350,22 @@
     let utteranceStartTs = 0;
     let estimatedDurationMs = 0;
     const synth = window.speechSynthesis;
+    let currentAudio = null;       // active HTMLAudioElement when using backend
+    let speakGeneration = 0;       // bumps on every new speak/stop, invalidates stale fetches
+    let backendVoiceId = null;     // selected MiniMax voice id; null = backend default
 
     function pickVoice() {
-      if (!synth) return;
-      const voices = synth.getVoices();
-      const preferred = voices.find(v => v.lang === 'ja-JP' && /Kyoko|Otoya|O-ren|Google/i.test(v.name));
-      voice = preferred || voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.startsWith('ja')) || null;
+      if (synth) {
+        const voices = synth.getVoices();
+        const preferred = voices.find(v => v.lang === 'ja-JP' && /Kyoko|Otoya|O-ren|Google/i.test(v.name));
+        voice = preferred || voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.startsWith('ja')) || null;
+      }
       const pill = document.getElementById('tts-status');
       if (pill) {
-        if (voice) {
+        if (BACKEND_BASE && !backendDisabled) {
+          pill.textContent = '音声 · MiniMax';
+          pill.classList.remove('unavailable');
+        } else if (voice) {
           pill.textContent = '音声 · ' + voice.name.split(' ')[0];
           pill.classList.remove('unavailable');
         } else {
@@ -353,8 +375,9 @@
       }
     }
 
+    // Initial paint (covers backend-only environments where synth has no voices).
+    pickVoice();
     if (synth) {
-      pickVoice();
       synth.onvoiceschanged = pickVoice;
     }
 
@@ -416,12 +439,86 @@
       if (fallbackTimer) { clearInterval(fallbackTimer); fallbackTimer = null; }
     }
 
+    function stopAudio() {
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch {}
+        try { currentAudio.src = ''; } catch {}
+        currentAudio = null;
+      }
+    }
+
+    async function speakViaBackend(item, gen, onEnd) {
+      const text = item.plain;
+      const params = new URLSearchParams({ text, speed: String(getRate()) });
+      if (backendVoiceId) params.set('voice', backendVoiceId);
+      const url = BACKEND_BASE + '/api/tts?' + params.toString();
+
+      const res = await fetch(url, { cache: 'force-cache' });
+      if (!res.ok) throw new Error('backend ' + res.status);
+      const blob = await res.blob();
+      if (gen !== speakGeneration) return; // user moved on
+
+      const objectUrl = URL.createObjectURL(blob);
+      const audio = new Audio(objectUrl);
+      currentAudio = audio;
+
+      utteranceStartTs = performance.now();
+      // Initial estimate; tightened once metadata loads.
+      estimatedDurationMs = (text.length / ESTIMATED_KANA_PER_SECOND_AT_1X / Math.max(0.5, getRate())) * 1000;
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          estimatedDurationMs = audio.duration * 1000;
+        }
+      });
+      audio.addEventListener('timeupdate', () => {
+        if (gen !== speakGeneration) return;
+        const elapsed = audio.currentTime * 1000;
+        const dur = estimatedDurationMs || 1;
+        const idx = Math.min(text.length - 1, Math.floor((elapsed / dur) * text.length));
+        applyKaraoke(item, idx);
+      });
+      const cleanup = () => {
+        URL.revokeObjectURL(objectUrl);
+        if (currentAudio === audio) currentAudio = null;
+      };
+      audio.addEventListener('ended', () => {
+        applyKaraoke(item, text.length + 1);
+        cleanup();
+        if (gen === speakGeneration) onEnd && onEnd();
+      });
+      audio.addEventListener('error', () => {
+        cleanup();
+        if (gen === speakGeneration) onEnd && onEnd();
+      });
+      await audio.play();
+    }
+
     function speak(item, onEnd) {
-      if (!synth) { onEnd && onEnd(); return; }
       const text = item.plain;
       buildSpansFor(item);
       // Reset karaoke state for the about-to-be-spoken item.
       clearKaraoke(item);
+
+      const gen = ++speakGeneration;
+
+      if (BACKEND_BASE && !backendDisabled) {
+        speakViaBackend(item, gen, onEnd).catch((err) => {
+          // First failure: disable backend for the rest of this session.
+          backendDisabled = true;
+          if (gen === speakGeneration) {
+            try { console.warn('[TTS] backend failed, falling back to Web Speech:', err && err.message); } catch {}
+            speakViaWebSpeech(item, onEnd);
+          }
+        });
+        return;
+      }
+      speakViaWebSpeech(item, onEnd);
+    }
+
+    function speakViaWebSpeech(item, onEnd) {
+      if (!synth) { onEnd && onEnd(); return; }
+      const text = item.plain;
 
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'ja-JP';
@@ -477,7 +574,8 @@
     function indexOfItem(item) { return allItems.indexOf(item); }
 
     function playOne(item, onComplete) {
-      synth.cancel();
+      stopAudio();
+      if (synth) synth.cancel();
       clearAllPlaying();
       currentItem = item;
       if (currentItem.el) {
@@ -535,6 +633,8 @@
     }
 
     function stop(reason) {
+      speakGeneration++;
+      stopAudio();
       if (synth) synth.cancel();
       clearFallback();
       if (currentItem) {
@@ -549,9 +649,11 @@
       updatePlayBtn();
     }
 
+    function hasAnyTts() { return Boolean(synth) || (Boolean(BACKEND_BASE) && !backendDisabled); }
+
     // Single sentence with N-time loop
     function playSingle(item) {
-      if (!synth) return;
+      if (!hasAnyTts()) return;
       // If gesture is "set A/B", consume the click instead of playing.
       if (pickingAB === 'A') {
         abRange = { aIdx: indexOfItem(item), bIdx: abRange ? abRange.bIdx : -1 };
@@ -616,7 +718,7 @@
 
     // A-B range loop — independent flow
     function playAB() {
-      if (!synth) return;
+      if (!hasAnyTts()) return;
       if (!abRange || abRange.aIdx < 0 || abRange.bIdx < 0) return;
       if (isPlaying) { stop('一時停止 / paused'); return; }
       let lo = Math.min(abRange.aIdx, abRange.bIdx);
